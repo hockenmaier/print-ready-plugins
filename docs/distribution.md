@@ -12,6 +12,16 @@ Reserve `plugins/claude` for a future production package with identity `print-re
 
 Import only the seven paths declared in scripts/import-verified.mjs. Require a verified Claude dev receipt, its archive SHA-256 and every file hash. Reject extra archive files, unsafe paths and mismatched metadata. Store public provenance with version, source commit, endpoint and file hashes, excluding source checkout paths and private reports. Add the repository's license as the eighth package file.
 
+Maintainers recover a verified release through the private product release process, then run:
+
+```sh
+node scripts/import-verified.mjs /path/to/print-ready-claude-dev-VERSION.zip /path/to/print-ready-claude-dev-VERSION.json
+node scripts/validate.mjs
+node scripts/package.mjs
+```
+
+Inspect the staged Git diff and import only the plugin folder and sanitized releases/claude-dev.json. Never commit the input ZIP, original private receipt or build directory. The original receipt contains runner filesystem paths that do not belong in public provenance.
+
 Do not fork MCP descriptions, response instructions or base modeling rules. Keep the verified service reference and shared skills byte-for-byte. Minimal host-specific additions originate in the owning host adapter. Subsequent product releases still build private dev ZIPs automatically; updating this public mirror is an explicit import and reviewed commit, not an automatic production promotion.
 
 ## Release gates

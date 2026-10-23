@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "print-ready": {
+      "type": "http",
+      "url": "https://dev.printreadyparts.com/mcp"
+    }
+  }
+}
