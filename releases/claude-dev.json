@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "host": "claude",
+  "environment": "dev",
+  "version": "0.7.27",
+  "sourceCommit": "4533992844efd2719ae77747b9ce0a8b4685bf8a",
+  "endpoint": "https://dev.printreadyparts.com/mcp",
+  "verifiedSourceArchiveSha256": "e801f416161b87f895256b86db76bcb5fe844c2c1876f5fc590575450d02bf4f",
+  "sourceFiles": {
+    ".claude-plugin/plugin.json": "6a732fc0c798cb1108f733ecdc2245186800316b577fbdb79eff7dca4448f80e",
+    ".mcp.json": "68cc410204afac06b244a1adfc3a19b60742fb34a5f893c1c0e3364809ac9d75",
+    "README.md": "264db2119da757d002129b11770b54d6535c955e852ecee29f079ef20c65ea00",
+    "assets/icon.png": "b5117e33d2ad39daeed650e213cea20109b2c38c086a91bf7d01004b19978269",
+    "skills/print-ready/SKILL.md": "450420382958463c98a20e6f6439357f3037980026d7cabca12935f942330d55",
+    "skills/print-ready/references/service-menu.md": "1d884ed9cc5a73e3ab479b62edc5ed67bd7d724afd089500d7d0cad487f0cf0d",
+    "skills/welcome/SKILL.md": "9379c8fd6f80e8aeb5f5dcdfdcbe3bfae5619bd326c465f83e44df329e6d41ad"
+  },
+  "licenseSha256": "de0d63cd8551f7da612659f6e235ad69dac745616a7ec2316880a40ad556b813"
+}
