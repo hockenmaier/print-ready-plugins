@@ -4,9 +4,9 @@ Print Ready gives AI assistants tools to design useful 3D-printable parts, inspe
 
 ## Claude development test
 
-The current package is [Print Ready Dev](plugins/claude-dev/README.md), version 0.7.27. It connects to `https://dev.printreadyparts.com/mcp`. It is for development testing, not the production Claude directory listing.
+The current package is [Print Ready Dev](plugins/claude-dev/README.md). Its version and source commit are recorded in the [generated release receipt](releases/claude-dev.json). It connects to `https://dev.printreadyparts.com/mcp`. It is for development testing, not the production Claude directory listing.
 
-See [tomorrow's test checklist](docs/claude-testing.md) and [release requirements](docs/distribution.md). A successful package check is not evidence that the actual Claude viewer or account flow works. The production Claude package and directory listing are pending.
+See the [test checklist](docs/claude-testing.md), [review preparation](docs/claude-review.md) and [release requirements](docs/distribution.md). A successful package check is not evidence that every actual Claude viewer or account flow works. The production Claude package and directory listing are pending.
 
 The [ChatGPT plugin](https://chatgpt.com/plugins/plugin_asdk_app_6ad4196fb960819189edf1264310ddf7) is already published. Visit [Print Ready](https://printreadyparts.com) for examples, [support](https://printreadyparts.com/support), [privacy](https://printreadyparts.com/privacy) and [service terms](https://printreadyparts.com/terms).
 
