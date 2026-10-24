@@ -1,0 +1,21 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import assert from 'node:assert/strict';
+const repository='hockenmaier/print-ready-plugins';
+assert.equal(process.env.GITHUB_REPOSITORY,repository);
+const branch=process.env.DISTRIBUTION_BRANCH;
+assert.match(branch??'',/^codex\/generated-claude-dev-[a-f0-9]{40}$/);
+const receipt=JSON.parse(await fs.readFile(path.resolve(import.meta.dirname,'../releases/claude-dev.json'),'utf8'));
+assert.equal(branch,'codex/generated-claude-dev-'+receipt.sourceCommit);
+assert.equal(receipt.environment,'dev');assert.match(receipt.version,/^\d+\.\d+\.\d+$/);
+assert.ok(process.env.GH_TOKEN,'Missing repository-local workflow token.');
+const headers={Authorization:'Bearer '+process.env.GH_TOKEN,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
+const endpoint='https://api.github.com/repos/'+repository+'/pulls';
+const existing=await fetch(endpoint+'?state=open&base=main&head='+encodeURIComponent('hockenmaier:'+branch),{headers});
+assert.ok(existing.ok,'Could not inspect existing distribution PRs.');
+const prs=await existing.json();
+if(prs.length){console.log('Existing generated update: '+prs[0].html_url);process.exit(0);}
+const body='Import verified Claude dev '+receipt.version+' from source commit '+receipt.sourceCommit+'.\n\nThe private release process exported only the approved installation files and sanitized provenance. Public validation and ZIP inspection passed on this commit. Production distribution and directory publication are unchanged.\n\nReview and merge this generated update; do not edit the skill copy here.';
+const created=await fetch(endpoint,{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({title:'Update Claude dev distribution to '+receipt.version,head:branch,base:'main',body})});
+assert.ok(created.ok,'Could not create generated distribution PR: HTTP '+created.status);
+console.log((await created.json()).html_url);
