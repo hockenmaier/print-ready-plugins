@@ -1,6 +1,6 @@
 # Claude development acceptance
 
-Test version 0.7.27 against dev. The latest run has not yet been accepted in the actual Claude product. Prior guest modeling and account saving succeeded in an earlier private upload; automated protocol and browser checks also passed for the current service. Neither substitutes for these tests.
+Test the version recorded in releases/claude-dev.json against dev. On October 23, 2026 the owner reported a successful companion-cube test with version 0.7.27; inspection confirmed the shared skill was read and the native viewer displayed the finished model. Earlier guest modeling and account saving succeeded in a private upload. Automated protocol and browser checks also passed for the service. These observations do not complete all cases below or establish production-directory acceptance.
 
 ## Install
 
