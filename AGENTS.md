@@ -6,6 +6,8 @@ Read docs/distribution.md before changing a plugin. It is the owning specificati
 
 The shared modeling instructions, welcome skill and MCP descriptions originate in the product source. Import an explicit verified file list; do not hand-edit a generated skill or service reference here. Preserve identical shared instructions between hosts and allow only documented host compatibility additions.
 
+The private release process pushes codex/generated-claude-dev-<source SHA> branches using a deploy key scoped to this public repository. Validate those branches and open update PRs with the repository-local workflow token. The public repository must never receive private-repository read access or AWS credentials. Review generated updates through PRs; do not edit both copies of a skill.
+
 Current work targets dev only. Do not change an endpoint to production, create a public release, submit to a directory or claim a listed Claude plugin without authorization and actual host acceptance. A public development repository is not a directory publication.
 
 Keep the owner's proprietary license. Changes to licensing require Brian's direction. No open-source license may be substituted automatically.

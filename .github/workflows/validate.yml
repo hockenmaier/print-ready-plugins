@@ -1,7 +1,7 @@
 name: Validate plugin distribution
 on:
   push:
-    branches: [main]
+    branches: [main, 'codex/generated-claude-dev-*']
   pull_request:
 permissions:
   contents: read
@@ -15,3 +15,19 @@ jobs:
           node-version: '24'
       - run: node scripts/validate.mjs
       - run: node scripts/package.mjs
+  open-update:
+    if: github.event_name == 'push' && startsWith(github.ref_name, 'codex/generated-claude-dev-')
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+      - run: node scripts/open-update-pr.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DISTRIBUTION_BRANCH: ${{ github.ref_name }}

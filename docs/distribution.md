@@ -22,7 +22,7 @@ node scripts/package.mjs
 
 Inspect the staged Git diff and import only the plugin folder and sanitized releases/claude-dev.json. Never commit the input ZIP, original private receipt or build directory. The original receipt contains runner filesystem paths that do not belong in public provenance.
 
-Do not fork MCP descriptions, response instructions or base modeling rules. Keep the verified service reference and shared skills byte-for-byte. Minimal host-specific additions originate in the owning host adapter. Subsequent product releases still build private dev ZIPs automatically; updating this public mirror is an explicit import and reviewed commit, not an automatic production promotion.
+Do not fork MCP descriptions, response instructions or base modeling rules. Keep the verified service reference and shared skills byte-for-byte. Minimal host-specific additions originate in the owning host adapter. The private release process now exports each successful verified dev delivery to a generated branch. This repository validates the branch and opens an update PR using its own ephemeral workflow token. Review and merge the generated PR instead of editing both copies. This is never an automatic production promotion or directory submission.
 
 ## Release gates
 
