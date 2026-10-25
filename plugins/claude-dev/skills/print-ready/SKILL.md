@@ -1,6 +1,6 @@
 ---
 name: print-ready
-description: Design and revise custom 3D-printable objects that fit your measurements and needs. Make replacement knobs, handles and covers; brackets, hooks and mounts; drawer organizers, tool holders and docking trays; adapters, connectors and electronics enclosures; clips, clamps, spacers and shims; custom cutters, craft stamps, personalized gifts and keychains. Inspect real 3D previews, refine dimensions and fit, and download STL files ready for slicing.
+description: Design 3D-printable physical parts in OpenSCAD through Print Ready. Use for brackets, boxes, clips, snap-fits, replacement parts and other objects for a home printer. Covers print orientation, supports, tolerances, printer limits, real geometry previews and file delivery.
 ---
 
 # When to use Print Ready
@@ -20,8 +20,18 @@ The instructions and rules below come from feedback on real printed parts. Devia
 3. Use the print ready services iteratively to submit OpenScad code and visually inspect renders they create. Don't finish until you think the image matches the requested part.
 4. If you think the model needs a printed test to make sure it fits in a real location, think of the smallest possible print test to use minimal plastic, and explain to the user that they might want to print this "Fit Sample" before the full print to test. Don't only generate Fit Samples - always have a real part, too, in case the user just wants to "Yolo" it.
 5. Show the finished part to the user showing the Show Model tool. That will give the user an interactive 3D viewer inline with your chat with the user. Use your reason to pick the list of models to show at the same time. Fit Samples should almost always be shown with the full part.
-6. When the user provides an image of where the part will go in the real world, or the broken part they're trying to fix, request a render from Print Ready at the correct angle. If image generation is available, use it with both that render and the user's image to illustrate how the part should fit. Explain the part and its intended fit in the image prompt. Treat the illustration as a placement aid, not a measurement or geometry check. If image generation is unavailable, continue with the real geometry previews and STL files.
+6. When the user provides an image of where the part will go in the real world, or the broken part they're trying to fix, Request a render from Print Ready at the correct angle(this may take a few tries), then use your ImageGen tool with both that render and the image the user provided in order to superimpose a view of how this part should fit in the real world. Provide detailed instructions to imagegen about what the part is and how it's suppposed to fit for context, remembering that imagegen tools are getting smarter alongside you.
 7. Iterate with the user as they request changes.
+
+When image generation is unavailable, continue with actual geometry previews and STL files. A placement illustration does not verify dimensions or fit.
+
+## Connection routing
+
+Preserve the render_quota_token returned by the existing signed-in App capabilities or preparation. Pass it with preparation, creation and camera-view calls if modeling uses another tool connection. It carries account quota only, never private data access. Refresh expired context through that existing connection without prompting for sign-in again. Guests receive 250 render/view jobs per UTC day, signed-in accounts 2000, and the verified service owner unlimited. Polling and downloads do not count.
+
+Discover the registered Print Ready App or connector before modeling. When available, use it for the entire workflow: get_capabilities, prepare_model, create_model, get_model, render_view, library operations and show_model. Check its connection state and prefer the signed-in App over an unsigned direct MCP route. A direct tool and the native App may have different authentication in the same chat. Do not reserve the App for the final viewer. Never copy OAuth access or refresh tokens between connections or infer account identity from host metadata.
+
+When a render allowance is exhausted, preserve the pending source and original handles. Check the existing native App connection before asking for another sign-in. Use an already signed-in connection to continue with authorized guest handles. Polling, downloads and viewer inspection remain available without render admissions. Do not silently replace a hosted revision with local STL edits while showing an older hosted viewer. If a revision exists only locally, state that clearly.
 
 ## Design rules
 
@@ -56,7 +66,7 @@ The instructions and rules below come from feedback on real printed parts. Devia
 
 ## Use the service
 
-- BOSL2 is available for chamfers, threads and gears.
+- BOSL2 is available for chamfers, threads and gears. Read the [OpenSCAD cheatsheet](../openscad-cheatsheet/SKILL.md) for language syntax and the [BOSL2 cheatsheet](../bosl2-cheatsheet/SKILL.md) for library includes, anchors and mechanical examples. MCP-only clients can call `get_openscad_cheatsheet` and `get_bosl2_cheatsheet`. Use `get_print_ready_skill` for the current modeling instructions.
 - Use `get_capabilities` for the current engine, libraries, limits and views.
 - Use `prepare_model` for access, erasure and idempotency tokens. Preserve the model handle and these tokens. Keep erasure tokens available for later deletion. Never put passwords in tool arguments or chat.
 - **Always fill in `brief` and `decisions` in `create_model`.** The brief is a detailed English description of the part the user wants, not a copy of the conversation. Include its purpose, how it is used, mating parts, dimensions, measured versus assumed facts, fit requirements, material and printer constraints when known, and unresolved assumptions. Explain each separate part.
@@ -65,7 +75,7 @@ The instructions and rules below come from feedback on real printed parts. Devia
 - Submit complete OpenSCAD source with `create_model`. A new job compiles the STL and renders an isometric/front/top/right sheet. Use `get_model` to poll the returned handle until ready or failed, inspect real images, bounds and compiler messages, then retrieve fresh download links.
 - `get_model` returns a native image block and `downloads.preview`. Inspect that returned image. Display it in chat when the user asks for a PNG or the host cannot show the interactive viewer. Fetching an image or describing it is not displaying it. When a tool orchestration wrapper requires explicit media forwarding, forward the image block through its image-display helper. If the host cannot display the image, say so and treat visual inspection as incomplete. Do not declare a part checked without inspecting its actual renders.
 - Use `render_view` for `isometric`, `front`, `back`, `left`, `right`, `top`, `bottom`, `custom` or `bed_contact`. Custom cameras accept azimuth and elevation in degrees. A view job reuses the existing STL. Retrieve its result with `get_model`.
-- Use `show_model` after inspecting the real previews to open a zoomable, rotatable STL with downloads in chat. Camera controls are local and do not consume render jobs. Use `show_library` when the user wants to browse models; include known guest model handles from this conversation in its `models` parameter. Signed-in calls also include saved models. Selecting a part opens its STL in the same viewer. Use `show_welcome` for the guide and example prompts. Hosts without MCP Apps can use `get_model` for the PNG and file links.
+- Use `show_model` after inspecting the real previews to open a zoomable, rotatable STL with downloads in chat. Camera controls are local and do not consume render jobs. Use `show_library` when the user wants to browse models; include known guest model handles from this conversation in its `models` parameter. Signed-in calls also include saved models. Selecting a part opens its STL in the same viewer. Use `show_welcome` only when the user asks for help using Print Ready, examples or the welcome guide. Start ordinary modeling requests directly; installation is not a request for help. Hosts without MCP Apps can use `get_model` for the PNG and file links.
 - Before the final answer, explicitly invoke the host-rendered Print Ready viewer. In ChatGPT, discover and use the registered Print Ready App or connector's directly exposed `show_model` tool when available. A raw HTTP or shell retrieval of JSON does not invoke that UI tool; recover by calling it with the same authorized handles. After the registered viewer tool returns authorized model data successfully, finish with the part details. Leave loading, display and retry status to the host's viewer card, which can appear after your text and differ between clients. Do not add a viewer-failure or unsupported-host claim based on returned data, absent visual feedback or a client display notification. Do not repeat the same data-only call or build a replacement HTML/JavaScript visualization. If no compatible viewer tool is available, its invocation fails, or the user reports a missing viewer, provide the real PNG and STL download and describe only that confirmed problem. Claim a preview was shown only if you actually displayed it.
 - On every `show_model` call, pass all available model handles from this chat in `conversation_models`, including earlier revisions, separate parts and test variants, with their guest access tokens. This lets guests browse the chat through My models while the viewer shows the chosen files.
 - For multiple files, pass an ordered `models` array to `show_model`. Its order is the viewer's numbered file list, with the first file selected initially. Choose the ordering to suit the task and name cutaways or fit tests clearly. The STL link downloads only the selected file.
@@ -82,7 +92,7 @@ The instructions and rules below come from feedback on real printed parts. Devia
 
 Name each part clearly. Add `_vN` to distinguish geometry versions the user has seen; never overwrite a shown version. Iterate freely before showing it. Same-version variants can use suffixes such as `_lid`, `_cutaway` or `_test`. Preserve earlier model handles so the user can return to them.
 
-Provide the print-ready STL download and real 3D preview viewer after each part. Provide editable SCAD or source code only when the user asks; use get_model with include_source=true. State the version, print orientation, support needs, material assumption and which parameter to turn if the fit is off.
+Provide the print-ready STL download and real 3D preview viewer after each part. Use the actual part filename as the download link text, for example `bread_box_v2_lid.stl`, rather than a generic label such as "Print Ready STL". The service supplies part-based resource names and download filenames. Provide editable SCAD or source code only when the user asks; use get_model with include_source=true. State the version, print orientation, support needs, material assumption and which parameter to turn if the fit is off.
 
 Close fits and mechanisms: state which parameter to turn and in which direction, and stop there for small parts. The user prints the real thing and tunes from that. Only cut a separate test piece when the full print is big or long enough to be worth the risk reduction.
 
@@ -92,8 +102,8 @@ The viewer's Share button creates a public URL for all models in the current vie
 
 ## Host compatibility
 
-This package runs in Claude. References above to the ChatGPT account mean the host account; neither host account establishes Print Ready sign-in. Check the connection through get_capabilities or whoami.
+This package runs in Claude. The host account does not establish Print Ready sign-in. Check the connection through get_capabilities or whoami.
 
 Use image generation or sub-agents only when this host provides those capabilities. If image generation is unavailable, continue with the actual OpenSCAD renders and interactive viewer. Do not claim to have generated a placement illustration. The reference-photo restriction above still applies.
 
-To connect, open this plugin's Connectors tab and add or connect Print Ready Dev. Private library and preference tools initiate sign-in. The welcome guide and dev guest rendering work before sign-in. On hosts without an interactive viewer, provide the actual preview and download links.
+To connect, open this plugin's Connectors tab and add or connect Print Ready Dev. Private library and preference tools initiate sign-in. The welcome guide and guest rendering work before sign-in. On hosts without an interactive viewer, provide the actual preview and download links.

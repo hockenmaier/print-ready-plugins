@@ -24,6 +24,8 @@ Inspect the staged Git diff and import only the plugin folder and sanitized rele
 
 Do not fork MCP descriptions, response instructions or base modeling rules. Keep the verified service reference and shared skills byte-for-byte. Minimal host-specific additions originate in the owning host adapter. The private release process now exports each successful verified dev delivery to a generated branch. This repository validates the branch and opens an update PR using its own ephemeral workflow token. Review and merge the generated PR instead of editing both copies. This is never an automatic production promotion or directory submission.
 
+Disable Git text conversion inside plugins/ so imported verified bytes retain their hashes across Windows and Linux. Do not normalize a generated file after importing it. The receipt, archive and committed file must agree byte-for-byte, including line endings.
+
 ## Release gates
 
 Local validation covers file inventory, hashes, manifest, dev endpoint and absence of executable server components. CI runs the same checks with no cloud credentials. These checks do not replace Claude's own validator, portal checks or a real host test.

@@ -2,18 +2,23 @@
   "schema": 1,
   "host": "claude",
   "environment": "dev",
-  "version": "0.7.27",
-  "sourceCommit": "4533992844efd2719ae77747b9ce0a8b4685bf8a",
+  "version": "0.7.31",
+  "sourceCommit": "32250b23e2d57766279ca73c9732eaf7c6e505e2",
   "endpoint": "https://dev.printreadyparts.com/mcp",
-  "verifiedSourceArchiveSha256": "e801f416161b87f895256b86db76bcb5fe844c2c1876f5fc590575450d02bf4f",
+  "verifiedSourceArchiveSha256": "5719e62b2a9b42695b0ab5379c65215bc37eae0d4af050a715a5b88819515281",
   "sourceFiles": {
-    ".claude-plugin/plugin.json": "6a732fc0c798cb1108f733ecdc2245186800316b577fbdb79eff7dca4448f80e",
+    ".claude-plugin/plugin.json": "925e0e697e6f7e8b3be1d585e1b30fa47def6f1987286b8b0024a24e84811ec8",
     ".mcp.json": "68cc410204afac06b244a1adfc3a19b60742fb34a5f893c1c0e3364809ac9d75",
-    "README.md": "264db2119da757d002129b11770b54d6535c955e852ecee29f079ef20c65ea00",
     "assets/icon.png": "b5117e33d2ad39daeed650e213cea20109b2c38c086a91bf7d01004b19978269",
-    "skills/print-ready/SKILL.md": "450420382958463c98a20e6f6439357f3037980026d7cabca12935f942330d55",
-    "skills/print-ready/references/service-menu.md": "1d884ed9cc5a73e3ab479b62edc5ed67bd7d724afd089500d7d0cad487f0cf0d",
-    "skills/welcome/SKILL.md": "9379c8fd6f80e8aeb5f5dcdfdcbe3bfae5619bd326c465f83e44df329e6d41ad"
+    "README.md": "c4f5d431d6c9d7f3b9e718e0562cca0c41073c13a4865fe29b316e1d47ac8010",
+    "skills/bosl2-cheatsheet/references/bosl2-basics.md": "4db0d0ef0d1b3bff8149985619226ee7832cce124699f4564064d0ca0bc41fe2",
+    "skills/bosl2-cheatsheet/SKILL.md": "69c8297659b4f697bdb3f7119fe25b814aa99092bb6b20458cf607033716eef9",
+    "skills/openscad-cheatsheet/references/cheatsheet.html": "527a28789da2ecf84e645ac0c88d038400f5af9ee921993ca66d23b23a4936fe",
+    "skills/openscad-cheatsheet/references/cheatsheet.md": "6268634623d055667bef57c0ada5c32fb4bec386f0ca0e498a139534fe2f0b06",
+    "skills/openscad-cheatsheet/SKILL.md": "173a9e87230c049225ed1187e32854b659c69776c49c0e434e868e4230163239",
+    "skills/print-ready/references/service-menu.md": "f1c515f4e2bc8568c0035b82a054b413720ef9c87d3b2ce6fa753da74815b6dd",
+    "skills/print-ready/SKILL.md": "a4f440dc5b0f188e5235d646707e5f435054ab0c59a9d97e54b847140102abaf",
+    "skills/welcome/SKILL.md": "0dee33a641463a0ae997d871afa35e1def4559eeb93a926c5e872a2b9296b780"
   },
   "licenseSha256": "de0d63cd8551f7da612659f6e235ad69dac745616a7ec2316880a40ad556b813"
 }
