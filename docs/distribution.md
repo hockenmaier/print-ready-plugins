@@ -10,7 +10,7 @@ Reserve `plugins/claude` for a future production package with identity `print-re
 
 ## Import boundary
 
-Import only the seven paths declared in scripts/import-verified.mjs. Require a verified Claude dev receipt, its archive SHA-256 and every file hash. Reject extra archive files, unsafe paths and mismatched metadata. Store public provenance with version, source commit, endpoint and file hashes, excluding source checkout paths and private reports. Add the repository's license as the eighth package file.
+Import only the explicit paths declared in scripts/distribution-files.mjs. Versions before 0.7.31 have seven source files. Version 0.7.31 and later additionally package the OpenSCAD and BOSL2 skills and their linked references, for twelve source files. Keep upstream attribution and links in those references. Require a verified Claude dev receipt, its archive SHA-256 and every file hash. Reject extra archive files, unsafe paths and mismatched metadata. Store public provenance with version, source commit, endpoint and file hashes, excluding source checkout paths and private reports. Add the repository's proprietary license as a separate package file without replacing third-party notices.
 
 Maintainers recover a verified release through the private product release process, then run:
 
