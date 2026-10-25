@@ -1,5 +1,9 @@
 # Decisions
 
+## October 25, 2026
+
+Brian requested linked OpenSCAD and BOSL2 reference skills in the product plugin. Accept their five named files in verified releases from 0.7.31 onward, preserving the strict inventory, source hashes and third-party attribution. Existing older deliveries remain valid with the original inventory. Import shared skill content through the verified release workflow; do not author a second copy here. This remains development distribution, with no production promotion or directory submission.
+
 ## October 23, 2026
 
 Brian authorized adding generated plugin inheritance to the private release process. Successful verified dev releases export only the approved package files and public provenance to generated branches in this repository. Local checks run on each generated push, then the public workflow opens an update PR. Keep review and merge separate from any production directory release. The public repository has no private-source access or AWS credentials.

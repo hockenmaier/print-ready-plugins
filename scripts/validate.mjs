@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
+import {sourceFiles} from './distribution-files.mjs';
 const root=path.resolve(import.meta.dirname,'..');
 const provenance=JSON.parse(await fs.readFile(path.join(root,'releases/claude-dev.json'),'utf8'));
 assert.equal(provenance.schema,1);assert.equal(provenance.environment,'dev');assert.equal(provenance.host,'claude');
@@ -16,7 +17,7 @@ async function visit(dir){for(const entry of await fs.readdir(dir,{withFileTypes
   if(entry.isDirectory())await visit(file);else{assert.ok(entry.isFile());actual.push(path.relative(dest,file).replaceAll('\\','/'));}
 }}
 await visit(dest);
-const sourcePaths=['.claude-plugin/plugin.json','.mcp.json','README.md','assets/icon.png','skills/print-ready/SKILL.md','skills/print-ready/references/service-menu.md','skills/welcome/SKILL.md'];
+const sourcePaths=sourceFiles(provenance.version);
 assert.deepEqual(Object.keys(provenance.sourceFiles).sort(),sourcePaths.slice().sort());
 assert.deepEqual(actual.sort(),[...sourcePaths,'LICENSE'].sort(),'Plugin contains unapproved files.');
 for(const [file,expected]of Object.entries(provenance.sourceFiles)){
@@ -31,6 +32,6 @@ const manifest=JSON.parse(await fs.readFile(path.join(dest,'.claude-plugin/plugi
 assert.equal(manifest.name,'print-ready-dev');assert.equal(manifest.version,provenance.version);
 assert.ok(manifest.author?.name&&manifest.description);assert.equal(manifest.icon,'./assets/icon.png');
 assert.deepEqual(JSON.parse(await fs.readFile(path.join(dest,'.mcp.json'),'utf8')),{mcpServers:{'print-ready':{type:'http',url:provenance.endpoint}}});
-for(const skill of ['print-ready','welcome'])assert.match(await fs.readFile(path.join(dest,'skills',skill,'SKILL.md'),'utf8'),/^---\r?\nname: /);
+for(const file of sourcePaths.filter(file=>file.endsWith('/SKILL.md')))assert.match(await fs.readFile(path.join(dest,file),'utf8'),/^---\r?\nname: /);
 assert.ok((await fs.readFile(path.join(dest,'README.md'),'utf8')).split(/\s+/).length>=40);
 console.log('Validated Claude dev '+provenance.version+': inventory, source hashes, license, manifest, endpoint and shared skills. Actual host acceptance remains required.');
