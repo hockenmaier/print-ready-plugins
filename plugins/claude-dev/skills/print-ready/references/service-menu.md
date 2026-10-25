@@ -1,6 +1,6 @@
 # Print Ready service menu
 
-Version 0.7.27. This is the tool menu advertised by the running MCP server.
+Version 0.7.31. This is the tool menu advertised by the running MCP server.
 
 All tool calls use POST /mcp with JSON-RPC method tools/call and params.name plus params.arguments.
 GET /tools returns the same descriptions, input schemas and annotations as MCP tools/list. GET /menu returns this readable reference.
@@ -16,14 +16,112 @@ Custom azimuth runs from -360 to 360 degrees and defaults to -45. Zero points fr
 bed_contact shows the footprint within 0.05 mm of the minimum Z of the source geometry. It does not alter the STL or prove adhesion.
 The sheet is automatic at model creation, not a render_view choice. Resolution, lighting and material color are fixed. render_view supports orthographic zoom from 0.25 to 2, default 1. Larger values enlarge the model and may crop it. There is no 3MF, color export or section-plane parameter. Submit a separate SCAD cutaway variant if needed.
 
+## Modeling references
+
+get_print_ready_skill, get_openscad_cheatsheet, get_bosl2_cheatsheet and get_welcome_skill return the same authored skills packaged with the plugin. get_capabilities advertises them. These read-only tools do not open the welcome screen. Show the guide only on requested help.
+
 ## Tools
 
 ### get_capabilities
 
-Get rendering limits, supported libraries and this connection's signed-in state. Guest rendering in dev works without private profile or saved-library access. Use sign_in.signed_in to answer whether this connection is signed in. The embedded UI displays the verified connection account separately.
+Get rendering limits, supported libraries and this connection's signed-in state. Guest rendering in dev works without private profile or saved-library access. Use sign_in.signed_in to answer whether this connection is signed in. The embedded UI displays the verified connection account separately. Check the registered Print Ready App first. Preserve its render_quota_token for all preparation and render calls when tools use different connections.
 
 Guest use is available; authenticated identity is used when supplied.
 Annotations: {"title":"Print Ready capabilities","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| render_quota_token | no | Optional render quota capability returned by the existing signed-in Print Ready connection. Preserve and pass it across modeling tool routes to use that account allowance. Grants no profile, library or model access. Refresh through the existing connection if expired; do not sign in again or silently fall back to guest quota. |
+
+Exact input schema:
+
+~~~json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "render_quota_token": {
+      "description": "Optional render quota capability returned by the existing signed-in Print Ready connection. Preserve and pass it across modeling tool routes to use that account allowance. Grants no profile, library or model access. Refresh through the existing connection if expired; do not sign in again or silently fall back to guest quota.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    }
+  },
+  "additionalProperties": false
+}
+~~~
+
+### get_print_ready_skill
+
+Return the current Print Ready modeling workflow, print guidance and delivery instructions. Read-only reference; does not render a part or open the welcome screen.
+
+Guest use is available; authenticated identity is used when supplied.
+Annotations: {"title":"Read Print Ready modeling skill","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| none | | No arguments. |
+
+Exact input schema:
+
+~~~json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}
+~~~
+
+### get_openscad_cheatsheet
+
+Return the OpenSCAD language skill and the downloaded cheatsheet in Markdown with the original documentation links and attribution. Read-only reference; no render or welcome screen.
+
+Guest use is available; authenticated identity is used when supplied.
+Annotations: {"title":"Read OpenSCAD cheatsheet","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| none | | No arguments. |
+
+Exact input schema:
+
+~~~json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}
+~~~
+
+### get_bosl2_cheatsheet
+
+Return the BOSL2 skill and practical reference for the pinned library, including includes, anchors, attachments, threads and gears with upstream documentation links. Read-only reference; no render or welcome screen.
+
+Guest use is available; authenticated identity is used when supplied.
+Annotations: {"title":"Read BOSL2 cheatsheet","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| none | | No arguments. |
+
+Exact input schema:
+
+~~~json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}
+~~~
+
+### get_welcome_skill
+
+Return the optional welcome-guide instructions as text. Use show_welcome only when the user asks for help using Print Ready, examples or the guide. Reading this skill does not display that screen.
+
+Guest use is available; authenticated identity is used when supplied.
+Annotations: {"title":"Read welcome skill","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}
 
 | Parameter | Required | Description |
 | --- | --- | --- |
@@ -64,14 +162,14 @@ Exact input schema:
 
 ### prepare_model
 
-Prepare a new model handle and retry key. Preserve the returned access and erasure tokens privately with the handle.
+Prepare a new model handle and retry key. Preserve the returned access and erasure tokens privately with the handle. Use the existing signed-in App when available. Preserve render_quota_token with the returned handle and pass it to create_model and render_view.
 
 Guest use is available; authenticated identity is used when supplied.
 Annotations: {"title":"Prepare model","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}
 
 | Parameter | Required | Description |
 | --- | --- | --- |
-| none | | No arguments. |
+| render_quota_token | no | Optional render quota capability returned by the existing signed-in Print Ready connection. Preserve and pass it across modeling tool routes to use that account allowance. Grants no profile, library or model access. Refresh through the existing connection if expired; do not sign in again or silently fall back to guest quota. |
 
 Exact input schema:
 
@@ -79,7 +177,13 @@ Exact input schema:
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
-  "properties": {},
+  "properties": {
+    "render_quota_token": {
+      "description": "Optional render quota capability returned by the existing signed-in Print Ready connection. Preserve and pass it across modeling tool routes to use that account allowance. Grants no profile, library or model access. Refresh through the existing connection if expired; do not sign in again or silently fall back to guest quota.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    }
+  },
   "additionalProperties": false
 }
 ~~~
@@ -93,6 +197,7 @@ Annotations: {"title":"Render model","readOnlyHint":false,"destructiveHint":fals
 
 | Parameter | Required | Description |
 | --- | --- | --- |
+| render_quota_token | no | Optional render quota capability returned by the existing signed-in Print Ready connection. Preserve and pass it across modeling tool routes to use that account allowance. Grants no profile, library or model access. Refresh through the existing connection if expired; do not sign in again or silently fall back to guest quota. |
 | context_model | no | An authorized model handle from this conversation, with its guest access token when needed. Pass it for another part, cutaway or test in the same conversation. This preserves session correlation when the host omits conversation metadata. It does not grant access to other models. For a revision, previous_model already carries this context. |
 | previous_model | no | For a revision, reference the earlier model ID and its guest access token if needed. The service uses this link to count iterations. Each revision keeps its own files and access. |
 | imagegen_used | no | Report whether image generation has been used in this conversation. Supply true or false when known. Omit when unknown. |
@@ -111,6 +216,11 @@ Exact input schema:
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
+    "render_quota_token": {
+      "description": "Optional render quota capability returned by the existing signed-in Print Ready connection. Preserve and pass it across modeling tool routes to use that account allowance. Grants no profile, library or model access. Refresh through the existing connection if expired; do not sign in again or silently fall back to guest quota.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    },
     "context_model": {
       "description": "An authorized model handle from this conversation, with its guest access token when needed. Pass it for another part, cutaway or test in the same conversation. This preserves session correlation when the host omits conversation metadata. It does not grant access to other models. For a revision, previous_model already carries this context.",
       "type": "object",
@@ -270,6 +380,7 @@ Annotations: {"title":"Render view","readOnlyHint":false,"destructiveHint":false
 
 | Parameter | Required | Description |
 | --- | --- | --- |
+| render_quota_token | no | Optional render quota capability returned by the existing signed-in Print Ready connection. Preserve and pass it across modeling tool routes to use that account allowance. Grants no profile, library or model access. Refresh through the existing connection if expired; do not sign in again or silently fall back to guest quota. |
 | model_id | yes | Completed parent model or view job UUID. Reuses its existing STL; does not recompile or reorient the part. |
 | access_token | no | Guest access secret for the parent model. Omit for an owned saved model. |
 | idempotency_key | yes | New random key for this view; reuse on retry with exactly the same camera options. |
@@ -285,6 +396,11 @@ Exact input schema:
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
+    "render_quota_token": {
+      "description": "Optional render quota capability returned by the existing signed-in Print Ready connection. Preserve and pass it across modeling tool routes to use that account allowance. Grants no profile, library or model access. Refresh through the existing connection if expired; do not sign in again or silently fall back to guest quota.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    },
     "model_id": {
       "type": "string",
       "format": "uuid",
@@ -700,7 +816,7 @@ Exact input schema:
 
 ### show_welcome
 
-Show the Print Ready welcome guide in chat, with the approved instructions, images and example prompts. No sign-in required. Example buttons send a prompt into the conversation where supported, or let the user copy it. Use for setup or when the user asks how to use Print Ready.
+Show the Print Ready welcome guide and example prompts only when the user asks for help using Print Ready, examples or the guide. Do not call after installation, for a greeting or before an ordinary modeling request. No sign-in required. Example buttons send a prompt into the conversation where supported, or let the user copy it.
 
 Guest use is available; authenticated identity is used when supplied.
 Annotations: {"title":"Welcome guide","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}

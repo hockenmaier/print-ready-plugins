@@ -1,13 +1,13 @@
 {
   "name": "print-ready-dev",
   "displayName": "Print Ready Dev",
-  "version": "0.7.27",
+  "version": "0.7.31",
   "description": "Design useful 3D-printable parts with real OpenSCAD previews, editable source and STL downloads.",
   "author": {
     "name": "Brian Hockenmaier"
   },
   "homepage": "https://dev.printreadyparts.com/welcome",
-  "repository": "https://github.com/hockenmaier/print-ready",
+  "repository": "https://github.com/hockenmaier/print-ready-plugins",
   "icon": "./assets/icon.png",
   "keywords": [
     "3d-printing",
