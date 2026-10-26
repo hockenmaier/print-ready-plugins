@@ -27,6 +27,8 @@ When image generation is unavailable, continue with actual geometry previews and
 
 ## Connection routing
 
+Keep the requested environment throughout the workflow. When the user selects Print Ready Dev, use its Dev connection for capabilities, creation, polling and show_model. Check the environment, version and mcp_url returned by get_capabilities. Never switch to production because another Print Ready App is signed in. If the selected installation is missing or desktop-only in this host, report that specific installation problem and repair it before treating a production render as a Dev test.
+
 Preserve the render_quota_token returned by the existing signed-in App capabilities or preparation. Pass it with preparation, creation and camera-view calls if modeling uses another tool connection. It carries account quota only, never private data access. Refresh expired context through that existing connection without prompting for sign-in again. Guests receive 250 render/view jobs per UTC day, signed-in accounts 2000, and the verified service owner unlimited. Polling and downloads do not count.
 
 Discover the registered Print Ready App or connector before modeling. When available, use it for the entire workflow: get_capabilities, prepare_model, create_model, get_model, render_view, library operations and show_model. Check its connection state and prefer the signed-in App over an unsigned direct MCP route. A direct tool and the native App may have different authentication in the same chat. Do not reserve the App for the final viewer. Never copy OAuth access or refresh tokens between connections or infer account identity from host metadata.

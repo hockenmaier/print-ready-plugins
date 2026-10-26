@@ -1,6 +1,6 @@
 # Print Ready service menu
 
-Version 0.7.31. This is the tool menu advertised by the running MCP server.
+Version 0.7.32. This is the tool menu advertised by the running MCP server.
 
 All tool calls use POST /mcp with JSON-RPC method tools/call and params.name plus params.arguments.
 GET /tools returns the same descriptions, input schemas and annotations as MCP tools/list. GET /menu returns this readable reference.
@@ -24,7 +24,7 @@ get_print_ready_skill, get_openscad_cheatsheet, get_bosl2_cheatsheet and get_wel
 
 ### get_capabilities
 
-Get rendering limits, supported libraries and this connection's signed-in state. Guest rendering in dev works without private profile or saved-library access. Use sign_in.signed_in to answer whether this connection is signed in. The embedded UI displays the verified connection account separately. Check the registered Print Ready App first. Preserve its render_quota_token for all preparation and render calls when tools use different connections.
+Get this connection's environment, release version, deployed SHA, endpoint, rendering limits, libraries, reference skill tools and signed-in state. Confirm the requested Dev or production environment before rendering or choosing a signed-in App. Never switch a Dev workflow to production because that connection is signed in. Preserve render_quota_token for preparation and render calls across authorized routes.
 
 Guest use is available; authenticated identity is used when supplied.
 Annotations: {"title":"Print Ready capabilities","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}
