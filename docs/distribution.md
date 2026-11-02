@@ -1,37 +1,32 @@
 # Distribution specification
 
-## Scope
+This repository contains installation files for Claude and Gemini CLI. The hosted service, infrastructure, credentials, customer data and private release reports remain in the private product repository. Shared skill files and service menus are generated from immutable verified service bundles. Host additions are authored there too. Do not edit generated skills here.
 
-Keep one neutral public repository for distributable Print Ready packages. The hosted MCP service, shared authored language and deployment system stay in the private product source. This repository contains no server implementation or customer data.
+## Package layout
 
-Current package path: `plugins/claude-dev`. Its identity is `print-ready-dev`; endpoint is `https://dev.printreadyparts.com/mcp`. Preserve its name and shared files from the verified development ZIP. Add a self-contained LICENSE inside the plugin folder. The bundled manifest still points to the product source repository; correct that metadata in the owning packager before the production distribution, not by editing an imported file here.
+The root `gemini-extension.json`, `GEMINI.md`, `skills/`, `assets/icon.png` and `LICENSE` form the production Gemini extension. `plugins/claude` is the production Claude plugin. Development variants live in `plugins/claude-dev` and `plugins/gemini-dev`. The root `.claude-plugin/marketplace.json` lists both Claude identities. Production is `print-ready`; development is `print-ready-dev`.
 
-Reserve `plugins/claude` for a future production package with identity `print-ready`. Do not create or submit that package until the production packager, actual host tests and release authorization are complete. Do not submit the development folder to the public directory.
+Production packages connect to `https://api.printreadyparts.com/mcp`. Dev packages connect to `https://dev.printreadyparts.com/mcp`. Production and dev may have different source versions. Generated receipts in `releases/plugins-prod.json` and `releases/plugins-dev.json` record the source SHA, environment, package version, source skill hashes, exported file hashes and proprietary license hash. The older `releases/claude-dev.json` remains the legacy dev receipt until the first combined dev import.
 
-## Import boundary
+Only approved skill/reference paths, host manifests, host context, the icon, README files, LICENSE and sanitized release receipts may be generated. Reject unsafe paths, symlinks, extra installation files, credential patterns, signed URLs and hash mismatches. Keep imported file bytes unchanged across operating systems.
 
-Import only the explicit paths declared in scripts/distribution-files.mjs. Versions before 0.7.31 have seven source files. Version 0.7.31 and later additionally package the OpenSCAD and BOSL2 skills and their linked references, for twelve source files. Keep upstream attribution and links in those references. Require a verified Claude dev receipt, its archive SHA-256 and every file hash. Reject extra archive files, unsafe paths and mismatched metadata. Store public provenance with version, source commit, endpoint and file hashes, excluding source checkout paths and private reports. Add the repository's proprietary license as a separate package file without replacing third-party notices.
+## Publication
 
-Maintainers recover a verified release through the private product release process, then run:
+The private owner console publishes exact immutable sources. It verifies that the selected service is live and that its menu matches the immutable bundle. Production publication requires the same source to be verified in production. It may wait for an already running deployment of that source. Publishing never deploys a service or selects website content.
+
+The publisher pushes a `codex/publish-plugins-<environment>-<request ID>` branch with the expected public base commit and owner request receipt. Public CI validates file hashes, inventory and packaged ZIPs and opens a PR using its existing repository-local token. The private publisher checks those exact-head results, verifies the public base is unchanged, merges with its existing repository-scoped key and removes the generated branch. Automatic dev synchronization instead uses `codex/generated-plugins-dev-<source SHA>`, validates and opens a review PR. It does not update production packages or merge automatically.
+
+The private repository uses a deploy key scoped to this public repository. The public workflow has only its repository-local temporary token. It receives no AWS credentials or private-source read access. Maintainer changes use short-lived branches and reviewed PRs. Preserve Brian's proprietary license and third-party notices.
+
+## Validate and install
+
+Use Node.js 24:
 
 ```sh
-node scripts/import-verified.mjs /path/to/print-ready-claude-dev-VERSION.zip /path/to/print-ready-claude-dev-VERSION.json
 node scripts/validate.mjs
 node scripts/package.mjs
 ```
 
-Inspect the staged Git diff and import only the plugin folder and sanitized releases/claude-dev.json. Never commit the input ZIP, original private receipt or build directory. The original receipt contains runner filesystem paths that do not belong in public provenance.
+ZIP inspection checks actual archive entries and bytes. Claude's official CLI validates each Claude manifest. Gemini CLI installs directly from the repository. See [Gemini testing](gemini-testing.md) and [Claude testing](claude-testing.md) for actual host checks. A validated ZIP or gallery listing does not prove rendering, sign-in or viewer delivery.
 
-Do not fork MCP descriptions, response instructions or base modeling rules. Keep the verified service reference and shared skills byte-for-byte. Minimal host-specific additions originate in the owning host adapter. The private release process now exports each successful verified dev delivery to a generated branch. This repository validates the branch and opens an update PR using its own ephemeral workflow token. Review and merge the generated PR instead of editing both copies. This is never an automatic production promotion or directory submission.
-
-Disable Git text conversion inside plugins/ so imported verified bytes retain their hashes across Windows and Linux. Do not normalize a generated file after importing it. The receipt, archive and committed file must agree byte-for-byte, including line endings.
-
-## Release gates
-
-Local validation covers file inventory, hashes, manifest, dev endpoint and absence of executable server components. CI runs the same checks with no cloud credentials. These checks do not replace Claude's own validator, portal checks or a real host test.
-
-Before public listing, finish actual guest and signed-in tests, provider attribution and console filters, shared product/policy wording, the production host packager, public package metadata and the connector submission. Set the public repository URL in the production manifest, and retain the proprietary license in the plugin folder. Resolve any portal licensing finding with Brian; do not switch licenses to pass validation.
-
-Claude's directory requires a repository-backed plugin bundle and a separate submission for the hosted MCP connector. Use the intended publisher organization and the same production MCP URL for both. Brian completes legal attestations. Repository population does not authorize submission, production deployment or a live release.
-
-Sources checked October 22, 2026: [plugin structure](https://claude.com/docs/plugins/build), [submission](https://claude.com/docs/plugins/submit), [checklist](https://claude.com/docs/plugins/pre-submission-checklist).
+Gemini's gallery discovers public GitHub repositories with topic `gemini-cli-extension` and a valid root `gemini-extension.json`. Its documented crawler runs daily. Keep direct installation available whether or not indexing has completed. Publishing this repository does not submit to Claude's official directory or change the existing ChatGPT listing.

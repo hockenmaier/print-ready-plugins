@@ -1,21 +1,15 @@
 import fs from 'node:fs/promises';
-import path from 'node:path';
 import assert from 'node:assert/strict';
-const repository='hockenmaier/print-ready-plugins';
-assert.equal(process.env.GITHUB_REPOSITORY,repository);
-const branch=process.env.DISTRIBUTION_BRANCH;
-assert.match(branch??'',/^codex\/generated-claude-dev-[a-f0-9]{40}$/);
-const receipt=JSON.parse(await fs.readFile(path.resolve(import.meta.dirname,'../releases/claude-dev.json'),'utf8'));
-assert.equal(branch,'codex/generated-claude-dev-'+receipt.sourceCommit);
-assert.equal(receipt.environment,'dev');assert.match(receipt.version,/^\d+\.\d+\.\d+$/);
-assert.ok(process.env.GH_TOKEN,'Missing repository-local workflow token.');
-const headers={Authorization:'Bearer '+process.env.GH_TOKEN,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
-const endpoint='https://api.github.com/repos/'+repository+'/pulls';
-const existing=await fetch(endpoint+'?state=open&base=main&head='+encodeURIComponent('hockenmaier:'+branch),{headers});
-assert.ok(existing.ok,'Could not inspect existing distribution PRs.');
-const prs=await existing.json();
-if(prs.length){console.log('Existing generated update: '+prs[0].html_url);process.exit(0);}
-const body='Import verified Claude dev '+receipt.version+' from source commit '+receipt.sourceCommit+'.\n\nThe private release process exported only the approved installation files and sanitized provenance. Public validation and ZIP inspection passed on this commit. Production distribution and directory publication are unchanged.\n\nReview and merge this generated update; do not edit the skill copy here.';
-const created=await fetch(endpoint,{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({title:'Update Claude dev distribution to '+receipt.version,head:branch,base:'main',body})});
-assert.ok(created.ok,'Could not create generated distribution PR: HTTP '+created.status);
-console.log((await created.json()).html_url);
+import {execFileSync} from 'node:child_process';
+const repository='hockenmaier/print-ready-plugins';assert.equal(process.env.GITHUB_REPOSITORY,repository);
+const branch=process.env.DISTRIBUTION_BRANCH,explicit=branch?.match(/^codex\/publish-plugins-(dev|prod)-([a-f0-9-]{36})$/),generated=branch?.match(/^codex\/generated-plugins-dev-([a-f0-9]{40})$/),legacy=branch?.match(/^codex\/generated-claude-dev-([a-f0-9]{40})$/);
+assert.ok(explicit||generated||legacy,'Unexpected publication branch.');
+const receipt=JSON.parse(await fs.readFile(new URL('../releases/'+(explicit?'plugins-'+explicit[1]:generated?'plugins-dev':'claude-dev')+'.json',import.meta.url),'utf8'));
+if(explicit){assert.equal(receipt.environment,explicit[1]);assert.equal(receipt.requestId,explicit[2]);assert.equal(receipt.ownerRequested,true);assert.match(receipt.expectedPublicCommit,/^[a-f0-9]{40}$/);assert.equal(execFileSync('git',['rev-parse','HEAD^'],{encoding:'utf8'}).trim(),receipt.expectedPublicCommit);}
+else assert.equal((generated??legacy)[1],receipt.sourceCommit);
+assert.ok(process.env.GH_TOKEN);const headers={Authorization:'Bearer '+process.env.GH_TOKEN,Accept:'application/vnd.github+json','Content-Type':'application/json','X-GitHub-Api-Version':'2022-11-28'},api='https://api.github.com/repos/'+repository;
+const head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
+const request=async(url,options={})=>{const result=await fetch(api+url,{...options,headers});assert.ok(result.ok,'GitHub publication request failed: '+result.status);return result.status===204?null:result.json();};
+const existing=await request('/pulls?state=open&base=main&head='+encodeURIComponent('hockenmaier:'+branch));
+const pull=existing[0]??await request('/pulls',{method:'POST',body:JSON.stringify({title:(explicit?'Publish '+receipt.environment+' plugins ':'Update Claude dev distribution to ')+receipt.version,head:branch,base:'main',body:'Import verified installation files from source '+receipt.sourceCommit+'. Public inventory, hashes, license and package checks passed on '+head+'.\n\n'+(explicit?'The owner requested this publication through the private release console. Merge only the validated head while the public base remains unchanged.':'Review and merge this development update. Production packages are unchanged.')})});
+console.log(pull.html_url);

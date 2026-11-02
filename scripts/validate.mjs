@@ -2,36 +2,35 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {sourceFiles} from './distribution-files.mjs';
-const root=path.resolve(import.meta.dirname,'..');
-const provenance=JSON.parse(await fs.readFile(path.join(root,'releases/claude-dev.json'),'utf8'));
-assert.equal(provenance.schema,1);assert.equal(provenance.environment,'dev');assert.equal(provenance.host,'claude');
-assert.match(provenance.sourceCommit,/^[a-f0-9]{40}$/);assert.match(provenance.verifiedSourceArchiveSha256,/^[a-f0-9]{64}$/);
-assert.equal(provenance.endpoint,'https://dev.printreadyparts.com/mcp');
-const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
-const dest=path.join(root,'plugins/claude-dev');
-const actual=[];
-async function visit(dir){for(const entry of await fs.readdir(dir,{withFileTypes:true})){
-  assert.ok(!entry.isSymbolicLink(),'Symlinks are not distributable.');
-  const file=path.join(dir,entry.name);
-  if(entry.isDirectory())await visit(file);else{assert.ok(entry.isFile());actual.push(path.relative(dest,file).replaceAll('\\','/'));}
-}}
-await visit(dest);
-const sourcePaths=sourceFiles(provenance.version);
-assert.deepEqual(Object.keys(provenance.sourceFiles).sort(),sourcePaths.slice().sort());
-assert.deepEqual(actual.sort(),[...sourcePaths,'LICENSE'].sort(),'Plugin contains unapproved files.');
-for(const [file,expected]of Object.entries(provenance.sourceFiles)){
-  const bytes=await fs.readFile(path.join(dest,file));assert.ok(bytes.length<256*1024,'Oversized file.');
-  assert.equal(hash(bytes),expected,'Shared file changed: '+file);
-  if(!file.endsWith('.png'))assert.ok(!/-----BEGIN [A-Z ]*PRIVATE KEY-----|\bAKIA[A-Z0-9]{16}\b|\bgh[pousr]_[A-Za-z0-9]{30,}\b|X-Amz-Signature=/i.test(bytes.toString()),'Unexpected secret or signed link in '+file);
+const root=path.resolve(import.meta.dirname,'..'),hash=bytes=>createHash('sha256').update(bytes).digest('hex');
+const inventory=async directory=>{const files=[];async function visit(dir){for(const entry of await fs.readdir(dir,{withFileTypes:true})){assert.ok(!entry.isSymbolicLink(),'Public symlink.');const file=path.join(dir,entry.name);if(entry.isDirectory())await visit(file);else{assert.ok(entry.isFile());files.push(path.relative(root,file).replaceAll('\\','/'));}}}await visit(directory);return files;};
+for(const environment of ['dev','prod']){
+ let receipt;try{receipt=JSON.parse(await fs.readFile(path.join(root,'releases/plugins-'+environment+'.json'),'utf8'));}catch(error){if(error.code==='ENOENT'&&environment==='dev')continue;throw error;}
+ assert.equal(receipt.schema,2);assert.equal(receipt.environment,environment);assert.match(receipt.sourceCommit,/^[a-f0-9]{40}$/);assert.match(receipt.version,/^\d+\.\d+\.\d+$/);
+ const endpoint=environment==='dev'?'https://dev.printreadyparts.com/mcp':'https://api.printreadyparts.com/mcp';assert.equal(receipt.endpoint,endpoint);
+ const claude='plugins/claude'+(environment==='dev'?'-dev':''),gemini=environment==='dev'?'plugins/gemini-dev/':'';
+ const name=environment==='dev'?'print-ready-dev':'print-ready';
+ const expected=['gemini-extension.json','GEMINI.md','LICENSE','assets/icon.png'];
+ if(environment==='dev')expected.push('README.md');
+ const sourceKeys=Object.keys(receipt.sourceFiles);assert.ok(sourceKeys.length>=4);
+ assert.ok(sourceKeys.every(file=>/^context\/skills\/[a-z0-9][a-z0-9/_.-]*$/i.test(file)&&!file.split('/').includes('..')));
+ const skills=sourceKeys.map(file=>file.replace('context/',''));skills.push('skills/print-ready/references/service-menu.md');
+ const allowed=[...expected.map(file=>gemini+file),...skills.map(file=>gemini+file),...[...skills,'.claude-plugin/plugin.json','.mcp.json','README.md','LICENSE','assets/icon.png'].map(file=>claude+'/'+file)];
+ assert.deepEqual(Object.keys(receipt.files).sort(),allowed.slice().sort(),'Unexpected public file inventory.');
+ const actual=await inventory(path.join(root,claude));
+ if(environment==='dev')actual.push(...await inventory(path.join(root,'plugins/gemini-dev')));
+ else actual.push(...await inventory(path.join(root,'skills')),...await inventory(path.join(root,'assets')),'gemini-extension.json','GEMINI.md','LICENSE');
+ assert.deepEqual(actual.sort(),allowed.slice().sort(),'Unapproved or stale installation files.');
+ for(const [file,digest]of Object.entries(receipt.files)){
+   assert.ok(!path.isAbsolute(file)&&!file.includes('\\')&&!file.split('/').some(part=>!part||part==='.'||part==='..'));
+   const bytes=await fs.readFile(path.join(root,file));assert.ok(bytes.length<256*1024);assert.equal(hash(bytes),digest,'Changed distribution file: '+file);
+   if(!file.endsWith('.png'))assert.ok(!/-----BEGIN [A-Z ]*PRIVATE KEY-----|\bAKIA[A-Z0-9]{16}\b|\bgh[pousr]_[A-Za-z0-9]{30,}\b|X-Amz-Signature=/i.test(bytes.toString()),'Secret or signed link.');
+ }
+ for(const sourceFile of sourceKeys){const file=sourceFile.replace('context/','');if(file==='skills/print-ready/SKILL.md')continue;for(const prefix of [claude+'/',gemini])assert.equal(hash(await fs.readFile(path.join(root,prefix+file))),receipt.sourceFiles[sourceFile],'Shared source changed.');}
+ const license=await fs.readFile(path.join(root,'LICENSE'));assert.equal(hash(license),receipt.licenseSha256);assert.deepEqual(await fs.readFile(path.join(root,claude,'LICENSE')),license);
+ const manifest=JSON.parse(await fs.readFile(path.join(root,gemini+'gemini-extension.json'),'utf8'));assert.equal(manifest.name,name);assert.equal(manifest.version,receipt.version);assert.equal(manifest.contextFileName,'GEMINI.md');assert.deepEqual(manifest.mcpServers,{'print-ready':{httpUrl:endpoint}});
+ const plugin=JSON.parse(await fs.readFile(path.join(root,claude,'.claude-plugin/plugin.json'),'utf8'));assert.equal(plugin.name,name);assert.equal(plugin.version,receipt.version);assert.deepEqual(JSON.parse(await fs.readFile(path.join(root,claude,'.mcp.json'),'utf8')),{mcpServers:{'print-ready':{type:'http',url:endpoint}}});
+ console.log('Validated '+environment+' Claude and Gemini '+receipt.version+' from '+receipt.sourceCommit+'.');
 }
-const license=await fs.readFile(path.join(dest,'LICENSE'));
-assert.equal(hash(license),provenance.licenseSha256);
-assert.deepEqual(license,await fs.readFile(path.join(root,'LICENSE')));
-const manifest=JSON.parse(await fs.readFile(path.join(dest,'.claude-plugin/plugin.json'),'utf8'));
-assert.equal(manifest.name,'print-ready-dev');assert.equal(manifest.version,provenance.version);
-assert.ok(manifest.author?.name&&manifest.description);assert.equal(manifest.icon,'./assets/icon.png');
-assert.deepEqual(JSON.parse(await fs.readFile(path.join(dest,'.mcp.json'),'utf8')),{mcpServers:{'print-ready':{type:'http',url:provenance.endpoint}}});
-for(const file of sourcePaths.filter(file=>file.endsWith('/SKILL.md')))assert.match(await fs.readFile(path.join(dest,file),'utf8'),/^---\r?\nname: /);
-assert.ok((await fs.readFile(path.join(dest,'README.md'),'utf8')).split(/\s+/).length>=40);
-console.log('Validated Claude dev '+provenance.version+': inventory, source hashes, license, manifest, endpoint and shared skills. Actual host acceptance remains required.');
+const marketplace=JSON.parse(await fs.readFile(path.join(root,'.claude-plugin/marketplace.json'),'utf8'));assert.equal(marketplace.name,'print-ready');for(const plugin of marketplace.plugins)assert.ok(['./plugins/claude','./plugins/claude-dev'].includes(plugin.source));
+try{await fs.access(path.join(root,'releases/plugins-dev.json'));}catch(error){if(error.code!=='ENOENT')throw error;await import('./validate-legacy.mjs');}

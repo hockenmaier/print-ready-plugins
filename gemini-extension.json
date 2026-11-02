@@ -1,0 +1,11 @@
+{
+  "name": "print-ready",
+  "version": "0.7.32",
+  "description": "Design useful 3D-printable parts with real OpenSCAD previews, editable source and STL downloads.",
+  "contextFileName": "GEMINI.md",
+  "mcpServers": {
+    "print-ready": {
+      "httpUrl": "https://api.printreadyparts.com/mcp"
+    }
+  }
+}

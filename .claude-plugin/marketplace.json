@@ -1,0 +1,8 @@
+{
+  "name": "print-ready",
+  "owner": {"name": "Brian Hockenmaier"},
+  "plugins": [
+    {"name": "print-ready", "source": "./plugins/claude"},
+    {"name": "print-ready-dev", "source": "./plugins/claude-dev"}
+  ]
+}
