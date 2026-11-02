@@ -19,3 +19,9 @@ Brian created hockenmaier/print-ready-plugins as a public, neutrally named distr
 Brian selected proprietary licensing. Permit installation and use, retain other rights, and include the license inside each installable plugin folder. Do not apply MIT or another open-source license.
 
 Begin with the existing dev-only Claude package from verified product version 0.7.27 and commit 4533992844efd2719ae77747b9ce0a8b4685bf8a. Preserve its seven packaged files and add the license. Brian will test in Claude before public directory submission. No production service change or directory submission is part of this repository setup.
+
+## Gemini and explicit console publication, November 2, 2026
+
+Brian authorized Gemini CLI gallery discovery and public repository installation. Add the root production Gemini extension and a Claude marketplace using the verified source matching production service 0.7.32. Keep actual host acceptance and optional local OAuth gaps explicit. Production service deployment remains separate.
+
+The private console can publish verified development or production packages through generated branches. Public CI validates and merges explicit owner-requested publication PRs against the expected public base. Automatic development imports continue to open review PRs. Preserve the proprietary license and private backend boundary.

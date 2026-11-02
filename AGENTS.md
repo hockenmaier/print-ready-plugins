@@ -1,17 +1,9 @@
 # Distribution repository guidance
 
-This repository contains public plugin distribution files, documentation and local packaging scripts. Never copy the backend repository, infrastructure, private reports, customer models, credentials or signed artifact links here.
+Read docs/distribution.md before changing installation files. This repository contains generated Claude and Gemini CLI packages and public documentation. Never copy backend source, infrastructure, private reports, customer models, credentials or signed links here.
 
-Read docs/distribution.md before changing a plugin. It is the owning specification for this repository. Record product or release-policy changes in docs/decisions.md before implementation.
+The private product repository owns the shared skills, host additions and service menus. Import only verified source snapshots through its distribution workflow. Preserve shared bytes and the proprietary license. Production and dev have separate source receipts and endpoints.
 
-The shared modeling instructions, welcome skill and MCP descriptions originate in the product source. Import an explicit verified file list; do not hand-edit a generated skill or service reference here. Preserve identical shared instructions between hosts and allow only documented host compatibility additions.
+The owner console authorizes explicit publication branches named codex/publish-plugins-<environment>-<request ID>. Public validation precedes the exact-head merge performed by the private publisher with its existing repository-scoped key. Automatic codex/generated-plugins-dev-<source SHA> updates open review PRs and leave production unchanged. The older generated-claude-dev branch form remains supported for historical recovery. The public repository must never receive AWS credentials or private-repository access.
 
-The private release process pushes codex/generated-claude-dev-<source SHA> branches using a deploy key scoped to this public repository. Validate those branches and open update PRs with the repository-local workflow token. The public repository must never receive private-repository read access or AWS credentials. Review generated updates through PRs; do not edit both copies of a skill.
-
-Current work targets dev only. Do not change an endpoint to production, create a public release, submit to a directory or claim a listed Claude plugin without authorization and actual host acceptance. A public development repository is not a directory publication.
-
-Keep the owner's proprietary license. Changes to licensing require Brian's direction. No open-source license may be substituted automatically.
-
-Use short-lived codex/ branches and pull requests after initial repository setup. Validate the exact PR head, merge completed work, and delete the merged branch. Run node scripts/validate.mjs and inspect the packaged ZIP before handoff. Keep generated ZIPs in ignored build output; do not add GitHub Actions build artifact uploads.
-
-Write plainly. Describe tested behavior and remaining gaps accurately. Preserve supplied product copy and host-specific technical instructions. When UI changes, verify supported light and dark modes in the actual host.
+Use short-lived codex/ branches and PRs for maintainer changes. Validate the exact head, merge finished work and remove merged branches. Run node scripts/validate.mjs and node scripts/package.mjs. Keep generated ZIPs in ignored build output. Do not claim actual host acceptance or gallery indexing without evidence. No Claude directory submission or production service deployment is implied by repository publishing.

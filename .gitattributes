@@ -1,2 +1,8 @@
 # Imported plugin bytes must retain the hashes from their verified receipts.
 plugins/** -text
+
+skills/** -text
+assets/** -text
+gemini-extension.json -text
+GEMINI.md -text
+LICENSE -text
