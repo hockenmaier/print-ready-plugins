@@ -56,11 +56,23 @@ Choose the thread's standard, nominal diameter, pitch, handedness and engagement
 include <BOSL2/std.scad>
 include <BOSL2/threading.scad>
 $fn=48;
-threaded_rod(d=10,l=12,pitch=2,anchor=BOTTOM);
-right(25) threaded_nut(nutwidth=20,id=10,h=8,pitch=2,anchor=BOTTOM);
+trapezoidal_threaded_rod(d=8,l=12,pitch=2,thread_angle=90,
+                       thread_depth=0.60,bevel=true,blunt_start=true,
+                       anchor=BOTTOM);
+right(20) difference() {
+  cyl(d=16,h=10,chamfer=0.6,anchor=BOTTOM);
+  down(0.01) trapezoidal_threaded_rod(d=8,l=10.02,pitch=2,
+    thread_angle=90,thread_depth=0.60,internal=true,$slop=0.15,
+    bevel=true,blunt_start=true,anchor=BOTTOM);
+  // 45 degree entry chamfers extend through the cutter's ends.
+  down(0.01) cyl(d1=9.8,d2=8.6,h=0.6,anchor=BOTTOM);
+  up(9.4) cyl(d1=8.6,d2=9.8,h=0.61,anchor=BOTTOM);
+}
 ```
 
-Use `$slop` only where the chosen module documents it; it is not a universal correction to every dimension. Keep fit allowance explicit and distinguish radial from diametral values. For a standards-based fastener, inspect `screw()` and `screw_hole()` in the [screws reference](https://github.com/BelfrySCAD/BOSL2/wiki/screws.scad). See [threaded_rod](https://github.com/BelfrySCAD/BOSL2/wiki/threading.scad#module-threaded_rod) and [threaded_nut](https://github.com/BelfrySCAD/BOSL2/wiki/threading.scad#module-threaded_nut).
+For custom FDM threads, `thread_angle=90` gives 45 degree flanks. Generate the female using the matching profile with `internal=true`. This V3 starting profile uses 8 mm diameter, 2 mm pitch and 0.60 mm radial depth, leaving 0.40 mm flat lands. Apply clearance once. On the female cutter, `$slop=0.15` adds 0.60 mm diametrally, or 0.30 mm radially. Do not also enlarge its nominal diameter. Include chamfered entries and blunt lead-ins, and print both axes vertically. Treat clearance as a starting value until physically tested.
+
+Use `$slop` only where the chosen module documents it. For a standards-based fastener, inspect `screw()` and `screw_hole()` in the [screws reference](https://github.com/BelfrySCAD/BOSL2/wiki/screws.scad). See [trapezoidal_threaded_rod](https://github.com/BelfrySCAD/BOSL2/wiki/threading.scad#module-trapezoidal_threaded_rod) for the custom printable profile. Standard hardware still needs its matching standard, dimensions and tolerances.
 
 ## Gears
 

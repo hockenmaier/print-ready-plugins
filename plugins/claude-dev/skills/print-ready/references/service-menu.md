@@ -1,6 +1,6 @@
 # Print Ready service menu
 
-Version 0.7.32. This is the tool menu advertised by the running MCP server.
+Version 0.7.37. This is the tool menu advertised by the running MCP server.
 
 All tool calls use POST /mcp with JSON-RPC method tools/call and params.name plus params.arguments.
 GET /tools returns the same descriptions, input schemas and annotations as MCP tools/list. GET /menu returns this readable reference.
@@ -31,6 +31,7 @@ Annotations: {"title":"Print Ready capabilities","readOnlyHint":true,"destructiv
 
 | Parameter | Required | Description |
 | --- | --- | --- |
+| include_welcome | no | See the exact schema below. |
 | render_quota_token | no | Optional render quota capability returned by the existing signed-in Print Ready connection. Preserve and pass it across modeling tool routes to use that account allowance. Grants no profile, library or model access. Refresh through the existing connection if expired; do not sign in again or silently fall back to guest quota. |
 
 Exact input schema:
@@ -40,6 +41,9 @@ Exact input schema:
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
+    "include_welcome": {
+      "type": "boolean"
+    },
     "render_quota_token": {
       "description": "Optional render quota capability returned by the existing signed-in Print Ready connection. Preserve and pass it across modeling tool routes to use that account allowance. Grants no profile, library or model access. Refresh through the existing connection if expired; do not sign in again or silently fall back to guest quota.",
       "type": "string",
