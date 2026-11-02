@@ -11,6 +11,12 @@ Gemini CLI runs in a terminal on your computer. A Google account signs you into 
 
 The gallery documents a daily crawl of public GitHub repositories tagged `gemini-cli-extension` with `gemini-extension.json` at the root. Allow at least a full crawl after publication. If it is absent, check the repository is public, the topic is present, the root manifest is valid and the name and version are correct. Direct installation works independently of gallery discovery.
 
+## Check your Google access
+
+Google moved consumer access, including free accounts and Google AI Pro/Ultra subscriptions, to Antigravity CLI on June 18, 2026. Gemini CLI remains available with a supported Gemini Code Assist Standard/Enterprise license or paid Gemini/Vertex API access. An ordinary personal Google login is no longer enough for a new Gemini CLI modeling session. See [Google's transition announcement](https://developers.googleblog.com/an-important-update-transitioning-gemini-cli-to-antigravity-cli/).
+
+This package is verified with Gemini CLI. Antigravity uses its own plugin format and has not been tested with these files. If you use a consumer Google account, read the transition documentation before choosing a client. Do not assume the Gemini extension installation command installs an Antigravity plugin.
+
 ## Install Gemini CLI for the first time
 
 Install Node.js 20 or newer and Git if they are missing. In Windows Terminal or PowerShell, run:
@@ -22,7 +28,7 @@ gemini extensions install https://github.com/hockenmaier/print-ready-plugins
 gemini
 ```
 
-Review the extension and MCP access prompt. Choose **Login with Google** when Gemini asks. Use your normal Chrome Google session for the browser login. If a work account blocks the connection, follow your organization's policy or use an eligible personal account. Do not paste credentials into chat.
+Review the extension and MCP access prompt. Choose the authentication method supported by your license. With supported enterprise Google access, use your normal Chrome session for browser sign-in. Paid API users should follow the official Gemini CLI authentication instructions and configure their key locally. Do not paste API keys or credentials into a chat. Consumer Google sign-in does not provide the discontinued Gemini CLI allowance.
 
 Restart Gemini after installing or updating extensions. Inside Gemini, run:
 
