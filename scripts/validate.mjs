@@ -28,7 +28,7 @@ for(const environment of ['dev','prod']){
  }
  for(const sourceFile of sourceKeys){const file=sourceFile.replace('context/','');if(file==='skills/print-ready/SKILL.md')continue;for(const prefix of [claude+'/',gemini])assert.equal(hash(await fs.readFile(path.join(root,prefix+file))),receipt.sourceFiles[sourceFile],'Shared source changed.');}
  const license=await fs.readFile(path.join(root,'LICENSE'));assert.equal(hash(license),receipt.licenseSha256);assert.deepEqual(await fs.readFile(path.join(root,claude,'LICENSE')),license);
- const manifest=JSON.parse(await fs.readFile(path.join(root,gemini+'gemini-extension.json'),'utf8'));assert.equal(manifest.name,name);assert.equal(manifest.version,receipt.version);assert.equal(manifest.contextFileName,'GEMINI.md');assert.deepEqual(manifest.mcpServers,{'print-ready':{httpUrl:endpoint}});
+ const manifest=JSON.parse(await fs.readFile(path.join(root,gemini+'gemini-extension.json'),'utf8'));assert.equal(manifest.name,name);assert.equal(manifest.version,receipt.version);assert.equal(manifest.contextFileName,'GEMINI.md');assert.deepEqual(manifest.mcpServers,{[name]:{httpUrl:endpoint}});
  const plugin=JSON.parse(await fs.readFile(path.join(root,claude,'.claude-plugin/plugin.json'),'utf8'));assert.equal(plugin.name,name);assert.equal(plugin.version,receipt.version);assert.deepEqual(JSON.parse(await fs.readFile(path.join(root,claude,'.mcp.json'),'utf8')),{mcpServers:{'print-ready':{type:'http',url:endpoint}}});
  console.log('Validated '+environment+' Claude and Gemini '+receipt.version+' from '+receipt.sourceCommit+'.');
 }
