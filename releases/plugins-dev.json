@@ -1,11 +1,12 @@
 {
   "schema": 2,
   "environment": "dev",
-  "version": "0.7.37",
-  "sourceCommit": "9af20996164c3a5b7de70222f22a01675dbb1d1d",
+  "version": "0.7.38",
+  "sourceCommit": "4b3f9912d5d4c847170bd4e06c6759c1efac71d5",
   "endpoint": "https://dev.printreadyparts.com/mcp",
   "sourceFiles": {
-    "context/skills/print-ready/SKILL.md": "818c53b10900aba026e7d3adb92c22ebb35bd5a6d659e9dca3032e3e88812e83",
+    "context/skills/print-ready/SKILL.md": "37cb3a44952a4d15d63b0a390cb28e9baddb56b702aaf2fd5b54c00436922932",
+    "context/skills/colored-reliefs/SKILL.md": "8d0ccd994b7e696c846bc0dc2807ae47245cc4fc9d5e3442ef144aae68fabf04",
     "context/skills/openscad-cheatsheet/SKILL.md": "173a9e87230c049225ed1187e32854b659c69776c49c0e434e868e4230163239",
     "context/skills/openscad-cheatsheet/references/cheatsheet.md": "6268634623d055667bef57c0ada5c32fb4bec386f0ca0e498a139534fe2f0b06",
     "context/skills/bosl2-cheatsheet/SKILL.md": "558427604cba9a4a39a38d23dd6e3e4d41fbbdd1a03b974593375645ad210b8e",
@@ -14,8 +15,10 @@
     "context/skills/openscad-cheatsheet/references/cheatsheet.html": "527a28789da2ecf84e645ac0c88d038400f5af9ee921993ca66d23b23a4936fe"
   },
   "files": {
-    "plugins/claude-dev/skills/print-ready/SKILL.md": "1946aa6d923bbe823295465b442d081edc6cfee58df6f00af1d1ef2d9b8a2044",
-    "plugins/gemini-dev/skills/print-ready/SKILL.md": "7ba7a5f6cc043a3e979518d4828739252d81251675207a153a1743a3836eb3f6",
+    "plugins/claude-dev/skills/print-ready/SKILL.md": "66e68c910996ab7d636c8a265fea11d79401a097d6fb894f1a4ecc92e5e942e7",
+    "plugins/gemini-dev/skills/print-ready/SKILL.md": "159e30513fe37fc07b769003fbf55dcb9c6b0d2eba070f90789fb5451da03384",
+    "plugins/claude-dev/skills/colored-reliefs/SKILL.md": "8d0ccd994b7e696c846bc0dc2807ae47245cc4fc9d5e3442ef144aae68fabf04",
+    "plugins/gemini-dev/skills/colored-reliefs/SKILL.md": "8d0ccd994b7e696c846bc0dc2807ae47245cc4fc9d5e3442ef144aae68fabf04",
     "plugins/claude-dev/skills/openscad-cheatsheet/SKILL.md": "173a9e87230c049225ed1187e32854b659c69776c49c0e434e868e4230163239",
     "plugins/gemini-dev/skills/openscad-cheatsheet/SKILL.md": "173a9e87230c049225ed1187e32854b659c69776c49c0e434e868e4230163239",
     "plugins/claude-dev/skills/openscad-cheatsheet/references/cheatsheet.md": "6268634623d055667bef57c0ada5c32fb4bec386f0ca0e498a139534fe2f0b06",
@@ -28,22 +31,18 @@
     "plugins/gemini-dev/skills/welcome/SKILL.md": "0dee33a641463a0ae997d871afa35e1def4559eeb93a926c5e872a2b9296b780",
     "plugins/claude-dev/skills/openscad-cheatsheet/references/cheatsheet.html": "527a28789da2ecf84e645ac0c88d038400f5af9ee921993ca66d23b23a4936fe",
     "plugins/gemini-dev/skills/openscad-cheatsheet/references/cheatsheet.html": "527a28789da2ecf84e645ac0c88d038400f5af9ee921993ca66d23b23a4936fe",
-    "plugins/claude-dev/skills/print-ready/references/service-menu.md": "5077cbf6e1b547a9b242a985d92401a4894419f136bd79ded60eb919cf5b7fec",
+    "plugins/claude-dev/skills/print-ready/references/service-menu.md": "9461b8f7bd66e84e183672986641761a4939e75261242320a61b9dba087ab1b9",
     "plugins/claude-dev/LICENSE": "de0d63cd8551f7da612659f6e235ad69dac745616a7ec2316880a40ad556b813",
     "plugins/claude-dev/assets/icon.png": "b5117e33d2ad39daeed650e213cea20109b2c38c086a91bf7d01004b19978269",
-    "plugins/gemini-dev/skills/print-ready/references/service-menu.md": "5077cbf6e1b547a9b242a985d92401a4894419f136bd79ded60eb919cf5b7fec",
+    "plugins/gemini-dev/skills/print-ready/references/service-menu.md": "9461b8f7bd66e84e183672986641761a4939e75261242320a61b9dba087ab1b9",
     "plugins/gemini-dev/LICENSE": "de0d63cd8551f7da612659f6e235ad69dac745616a7ec2316880a40ad556b813",
     "plugins/gemini-dev/assets/icon.png": "b5117e33d2ad39daeed650e213cea20109b2c38c086a91bf7d01004b19978269",
-    "plugins/claude-dev/.claude-plugin/plugin.json": "08d81605c21a78fd0caeaeb6f2d33d8618a3689491051030a2de8c3a0a5c1f8a",
+    "plugins/claude-dev/.claude-plugin/plugin.json": "116402761bdb6ad73f5cbdc4d820c7704af52f35fa8bd5d2f40885728e32ae35",
     "plugins/claude-dev/.mcp.json": "68cc410204afac06b244a1adfc3a19b60742fb34a5f893c1c0e3364809ac9d75",
     "plugins/claude-dev/README.md": "c4f5d431d6c9d7f3b9e718e0562cca0c41073c13a4865fe29b316e1d47ac8010",
-    "plugins/gemini-dev/gemini-extension.json": "50ea1bbe769e56d85f85cedf2dd76b6f36a0bce9384300ff98d62d179a3eca4a",
+    "plugins/gemini-dev/gemini-extension.json": "ce6cc76914b46ef3779e29858783bf16db1155655a71a0eaa645496bc6cbac2a",
     "plugins/gemini-dev/GEMINI.md": "edc54d380e43a02ac3009d80804d7d05e160fe629b8faf5df4b52ee0d4c35dcc",
     "plugins/gemini-dev/README.md": "ffb536fba177f5d039c1c9c9ff2b1c92c4c46424920db32664ff2217c9106909"
   },
-  "licenseSha256": "de0d63cd8551f7da612659f6e235ad69dac745616a7ec2316880a40ad556b813",
-  "requestId": "89796428-9e23-43b7-8265-f40f8f02716f",
-  "expectedPublicCommit": "6844248587300c1089d577e9a00a8283d92fb670",
-  "at": "2026-11-02T19:43:19.794Z",
-  "ownerRequested": true
+  "licenseSha256": "de0d63cd8551f7da612659f6e235ad69dac745616a7ec2316880a40ad556b813"
 }

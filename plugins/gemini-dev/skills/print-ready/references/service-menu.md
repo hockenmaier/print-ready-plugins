@@ -1,6 +1,6 @@
 # Print Ready service menu
 
-Version 0.7.37. This is the tool menu advertised by the running MCP server.
+Version 0.7.38. This is the tool menu advertised by the running MCP server.
 
 All tool calls use POST /mcp with JSON-RPC method tools/call and params.name plus params.arguments.
 GET /tools returns the same descriptions, input schemas and annotations as MCP tools/list. GET /menu returns this readable reference.
@@ -14,11 +14,11 @@ create_model compiles complete source and returns a 640 x 640 PNG sheet. Upper l
 render_view returns a 320 x 320 PNG for isometric, front, back, left, right, top, bottom, custom or bed_contact. It reuses the compiled STL and returns the same source/STL geometry in that view job.
 Custom azimuth runs from -360 to 360 degrees and defaults to -45. Zero points from +X and positive angles turn toward +Y. Elevation runs from -90 to 90 and defaults to 35. Zero is level, +90 is top, -90 is bottom. Camera fitting is automatic.
 bed_contact shows the footprint within 0.05 mm of the minimum Z of the source geometry. It does not alter the STL or prove adhesion.
-The sheet is automatic at model creation, not a render_view choice. Resolution, lighting and material color are fixed. render_view supports orthographic zoom from 0.25 to 2, default 1. Larger values enlarge the model and may crop it. There is no 3MF, color export or section-plane parameter. Submit a separate SCAD cutaway variant if needed.
+The sheet is automatic at model creation, not a render_view choice. Resolution, lighting and material color are fixed. render_view supports orthographic zoom from 0.25 to 2, default 1. Larger values enlarge the model and may crop it. create_3mf packages ready STL models with named parts and materials. create_colored_relief combines PNG palette refinement, tracing, height bands and print files in one job. refine_artwork and trace_artwork expose the stages separately. The host image generator supplies new artwork. Submit a separate SCAD cutaway variant for a section plane.
 
 ## Modeling references
 
-get_print_ready_skill, get_openscad_cheatsheet, get_bosl2_cheatsheet and get_welcome_skill return the same authored skills packaged with the plugin. get_capabilities advertises them. These read-only tools do not open the welcome screen. Show the guide only on requested help.
+get_print_ready_skill, get_colored_reliefs_skill, get_openscad_cheatsheet, get_bosl2_cheatsheet and get_welcome_skill return the same authored skills packaged with the plugin. get_capabilities advertises them. These read-only tools do not open the welcome screen. Show the guide only on requested help.
 
 ## Tools
 
@@ -60,6 +60,28 @@ Return the current Print Ready modeling workflow, print guidance and delivery in
 
 Guest use is available; authenticated identity is used when supplied.
 Annotations: {"title":"Read Print Ready modeling skill","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| none | | No arguments. |
+
+Exact input schema:
+
+~~~json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}
+~~~
+
+### get_colored_reliefs_skill
+
+Read the modeling skill for printable signs, nameplates, birthday placards, logos, magnets, ornaments and other shallow artwork from a simple palette. Use proactively for these designs.
+
+Guest use is available; authenticated identity is used when supplied.
+Annotations: {"title":"Colored reliefs skill","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}
 
 | Parameter | Required | Description |
 | --- | --- | --- |
@@ -166,7 +188,7 @@ Exact input schema:
 
 ### prepare_model
 
-Prepare a new model handle and retry key. Preserve the returned access and erasure tokens privately with the handle. Use the existing signed-in App when available. Preserve render_quota_token with the returned handle and pass it to create_model and render_view.
+Prepare a new model handle and retry key. Preserve the returned access and erasure tokens privately with the handle. Use the existing signed-in App when available. Preserve render_quota_token with the returned handle and pass it to queued modeling tools and render_view.
 
 Guest use is available; authenticated identity is used when supplied.
 Annotations: {"title":"Prepare model","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}
@@ -194,7 +216,7 @@ Exact input schema:
 
 ### create_model
 
-Create a printable part from complete OpenSCAD source, a required detailed English brief and required design decisions. Compiles a binary STL in source orientation and a 640 x 640 sheet of real isometric/front/top/right previews. Returns a queued job handle; poll get_model for status, intent, images and STL/PNG/manifest downloads; request SCAD only when the user asks. Reuse identical source, brief, decisions and tokens for retries. A new revision uses a new preparation. Link revisions with previous_model and other parts in this conversation with context_model. No 3MF or material-color export.
+Create a printable part from complete OpenSCAD source, a required detailed English brief and required design decisions. Compiles a binary STL in source orientation and a 640 x 640 sheet of real isometric/front/top/right previews. Returns a queued job handle; poll get_model for status, intent, images and STL/PNG/manifest downloads; request SCAD only when the user asks. Reuse identical source, brief, decisions and tokens for retries. A new revision uses a new preparation. Link revisions with previous_model and other parts in this conversation with context_model. To package ready STL models with material colors, call create_3mf.
 
 Guest use is available; authenticated identity is used when supplied.
 Annotations: {"title":"Render model","readOnlyHint":false,"destructiveHint":false,"openWorldHint":false}
@@ -320,6 +342,970 @@ Exact input schema:
     "idempotency_key",
     "access_token",
     "erasure_token"
+  ],
+  "additionalProperties": false
+}
+~~~
+
+### refine_artwork
+
+Reduce printable PNG artwork to a fixed palette and clean small color artifacts. Call prepare_model first. Poll get_model for the flattened PNG and selected colors. Pass this job as artwork to trace_artwork or create_colored_relief.
+
+Guest use is available; authenticated identity is used when supplied.
+Annotations: {"title":"Refine artwork","readOnlyHint":false,"destructiveHint":false,"openWorldHint":true}
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| render_quota_token | no | Optional render quota capability returned by the existing signed-in Print Ready connection. Preserve and pass it across modeling tool routes to use that account allowance. Grants no profile, library or model access. Refresh through the existing connection if expired; do not sign in again or silently fall back to guest quota. |
+| context_model | no | An authorized model handle from this conversation, with its guest access token when needed. Pass it for another part, cutaway or test in the same conversation. This preserves session correlation when the host omits conversation metadata. It does not grant access to other models. For a revision, previous_model already carries this context. |
+| previous_model | no | For a revision, reference the earlier model ID and its guest access token if needed. The service uses this link to count iterations. Each revision keeps its own files and access. |
+| imagegen_used | no | Report whether image generation has been used in this conversation. Supply true or false when known. Omit when unknown. |
+| name | yes | Part name and visible version, at most 100 characters. Name separate parts and cutaway/test variants distinctly. |
+| brief | yes | Required detailed English model intent, 40 to 10000 characters. Describe purpose, use, mating parts, dimensions, measured facts, fit requirements, known printer/material constraints and assumptions. Summarize the request rather than copying chat messages. |
+| decisions | yes | Required design notes, 1 to 30 entries of at most 2000 characters each. Explain orientation, bed face, support/bridge choices, fit parameters, fasteners, assumptions and changes from the previous revision as relevant. |
+| idempotency_key | yes | Use the key from prepare_model. Reuse it only for retries of identical source, brief and decisions. A new revision needs a new key. |
+| access_token | yes | Secret from prepare_model. Required for submission and guest retrieval. Preserve privately with the handle. |
+| erasure_token | yes | Separate secret from prepare_model for deletion, including after guest downloads expire. Preserve privately. |
+| file | no | Host file parameter for an attached or generated PNG of the printable artwork. |
+| image_url | no | Reachable HTTPS URL or PNG data URL for the printable artwork. Send only the art to be traced. |
+| artwork | no | Handle from refine_artwork or trace_artwork, with guest access token if needed. |
+| palette | no | Ordered #RRGGBB colors. First is the base, later colors are raised in this order. Omit to select colors from the image. |
+| colors | no | Maximum number of automatically selected colors, including the base. Default 4. |
+| footprint | no | Rectangle fills transparent pixels with the base color. Silhouette keeps transparent areas open. |
+| cleanup | no | Clean small color artifacts. Defaults to true for new images. |
+| resolution_px | no | Longest edge of the tracing grid in pixels. Defaults to 480. |
+
+Exact input schema:
+
+~~~json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "render_quota_token": {
+      "description": "Optional render quota capability returned by the existing signed-in Print Ready connection. Preserve and pass it across modeling tool routes to use that account allowance. Grants no profile, library or model access. Refresh through the existing connection if expired; do not sign in again or silently fall back to guest quota.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    },
+    "context_model": {
+      "description": "An authorized model handle from this conversation, with its guest access token when needed. Pass it for another part, cutaway or test in the same conversation. This preserves session correlation when the host omits conversation metadata. It does not grant access to other models. For a revision, previous_model already carries this context.",
+      "type": "object",
+      "properties": {
+        "model_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "access_token": {
+          "type": "string",
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "model_id"
+      ],
+      "additionalProperties": false
+    },
+    "previous_model": {
+      "description": "For a revision, reference the earlier model ID and its guest access token if needed. The service uses this link to count iterations. Each revision keeps its own files and access.",
+      "type": "object",
+      "properties": {
+        "model_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "access_token": {
+          "type": "string",
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "model_id"
+      ],
+      "additionalProperties": false
+    },
+    "imagegen_used": {
+      "description": "Report whether image generation has been used in this conversation. Supply true or false when known. Omit when unknown.",
+      "type": "boolean"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Part name and visible version, at most 100 characters. Name separate parts and cutaway/test variants distinctly."
+    },
+    "brief": {
+      "type": "string",
+      "minLength": 40,
+      "maxLength": 10000,
+      "description": "Required detailed English model intent, 40 to 10000 characters. Describe purpose, use, mating parts, dimensions, measured facts, fit requirements, known printer/material constraints and assumptions. Summarize the request rather than copying chat messages."
+    },
+    "decisions": {
+      "minItems": 1,
+      "maxItems": 30,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2000
+      },
+      "description": "Required design notes, 1 to 30 entries of at most 2000 characters each. Explain orientation, bed face, support/bridge choices, fit parameters, fasteners, assumptions and changes from the previous revision as relevant."
+    },
+    "idempotency_key": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]{16,100}$",
+      "description": "Use the key from prepare_model. Reuse it only for retries of identical source, brief and decisions. A new revision needs a new key."
+    },
+    "access_token": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$",
+      "description": "Secret from prepare_model. Required for submission and guest retrieval. Preserve privately with the handle."
+    },
+    "erasure_token": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$",
+      "description": "Separate secret from prepare_model for deletion, including after guest downloads expire. Preserve privately."
+    },
+    "file": {
+      "type": "object",
+      "properties": {
+        "download_url": {
+          "type": "string",
+          "maxLength": 8000,
+          "format": "uri"
+        },
+        "file_id": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "mime_type": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "file_name": {
+          "type": "string",
+          "maxLength": 512
+        }
+      },
+      "required": [
+        "download_url",
+        "file_id"
+      ],
+      "additionalProperties": false,
+      "description": "Host file parameter for an attached or generated PNG of the printable artwork."
+    },
+    "image_url": {
+      "description": "Reachable HTTPS URL or PNG data URL for the printable artwork. Send only the art to be traced.",
+      "type": "string",
+      "maxLength": 5700000
+    },
+    "artwork": {
+      "description": "Handle from refine_artwork or trace_artwork, with guest access token if needed.",
+      "type": "object",
+      "properties": {
+        "model_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "description": "Model or view job UUID returned by the service."
+        },
+        "access_token": {
+          "description": "Original guest access secret. Required for guest models; omitted for models owned by the signed-in identity.",
+          "type": "string",
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "model_id"
+      ],
+      "additionalProperties": false
+    },
+    "palette": {
+      "description": "Ordered #RRGGBB colors. First is the base, later colors are raised in this order. Omit to select colors from the image.",
+      "minItems": 1,
+      "maxItems": 16,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^#[0-9a-fA-F]{6}$"
+      }
+    },
+    "colors": {
+      "description": "Maximum number of automatically selected colors, including the base. Default 4.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16
+    },
+    "footprint": {
+      "description": "Rectangle fills transparent pixels with the base color. Silhouette keeps transparent areas open.",
+      "type": "string",
+      "enum": [
+        "rectangle",
+        "silhouette"
+      ]
+    },
+    "cleanup": {
+      "description": "Clean small color artifacts. Defaults to true for new images.",
+      "type": "boolean"
+    },
+    "resolution_px": {
+      "description": "Longest edge of the tracing grid in pixels. Defaults to 480.",
+      "type": "integer",
+      "minimum": 64,
+      "maximum": 720
+    }
+  },
+  "required": [
+    "name",
+    "brief",
+    "decisions",
+    "idempotency_key",
+    "access_token",
+    "erasure_token"
+  ],
+  "additionalProperties": false
+}
+~~~
+
+### trace_artwork
+
+Convert PNG artwork or a ready refine_artwork handle into layered vector outlines. Call prepare_model first. Poll get_model for the flattened preview, SVG and contour JSON. Pass this job as artwork to create_colored_relief.
+
+Guest use is available; authenticated identity is used when supplied.
+Annotations: {"title":"Trace artwork","readOnlyHint":false,"destructiveHint":false,"openWorldHint":true}
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| render_quota_token | no | Optional render quota capability returned by the existing signed-in Print Ready connection. Preserve and pass it across modeling tool routes to use that account allowance. Grants no profile, library or model access. Refresh through the existing connection if expired; do not sign in again or silently fall back to guest quota. |
+| context_model | no | An authorized model handle from this conversation, with its guest access token when needed. Pass it for another part, cutaway or test in the same conversation. This preserves session correlation when the host omits conversation metadata. It does not grant access to other models. For a revision, previous_model already carries this context. |
+| previous_model | no | For a revision, reference the earlier model ID and its guest access token if needed. The service uses this link to count iterations. Each revision keeps its own files and access. |
+| imagegen_used | no | Report whether image generation has been used in this conversation. Supply true or false when known. Omit when unknown. |
+| name | yes | Part name and visible version, at most 100 characters. Name separate parts and cutaway/test variants distinctly. |
+| brief | yes | Required detailed English model intent, 40 to 10000 characters. Describe purpose, use, mating parts, dimensions, measured facts, fit requirements, known printer/material constraints and assumptions. Summarize the request rather than copying chat messages. |
+| decisions | yes | Required design notes, 1 to 30 entries of at most 2000 characters each. Explain orientation, bed face, support/bridge choices, fit parameters, fasteners, assumptions and changes from the previous revision as relevant. |
+| idempotency_key | yes | Use the key from prepare_model. Reuse it only for retries of identical source, brief and decisions. A new revision needs a new key. |
+| access_token | yes | Secret from prepare_model. Required for submission and guest retrieval. Preserve privately with the handle. |
+| erasure_token | yes | Separate secret from prepare_model for deletion, including after guest downloads expire. Preserve privately. |
+| file | no | Host file parameter for an attached or generated PNG of the printable artwork. |
+| image_url | no | Reachable HTTPS URL or PNG data URL for the printable artwork. Send only the art to be traced. |
+| artwork | no | Handle from refine_artwork or trace_artwork, with guest access token if needed. |
+| palette | no | Ordered #RRGGBB colors. First is the base, later colors are raised in this order. Omit to select colors from the image. |
+| colors | no | Maximum number of automatically selected colors, including the base. Default 4. |
+| footprint | no | Rectangle fills transparent pixels with the base color. Silhouette keeps transparent areas open. |
+| cleanup | no | Clean small color artifacts. Defaults to true for new images. |
+| resolution_px | no | Longest edge of the tracing grid in pixels. Defaults to 480. |
+
+Exact input schema:
+
+~~~json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "render_quota_token": {
+      "description": "Optional render quota capability returned by the existing signed-in Print Ready connection. Preserve and pass it across modeling tool routes to use that account allowance. Grants no profile, library or model access. Refresh through the existing connection if expired; do not sign in again or silently fall back to guest quota.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    },
+    "context_model": {
+      "description": "An authorized model handle from this conversation, with its guest access token when needed. Pass it for another part, cutaway or test in the same conversation. This preserves session correlation when the host omits conversation metadata. It does not grant access to other models. For a revision, previous_model already carries this context.",
+      "type": "object",
+      "properties": {
+        "model_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "access_token": {
+          "type": "string",
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "model_id"
+      ],
+      "additionalProperties": false
+    },
+    "previous_model": {
+      "description": "For a revision, reference the earlier model ID and its guest access token if needed. The service uses this link to count iterations. Each revision keeps its own files and access.",
+      "type": "object",
+      "properties": {
+        "model_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "access_token": {
+          "type": "string",
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "model_id"
+      ],
+      "additionalProperties": false
+    },
+    "imagegen_used": {
+      "description": "Report whether image generation has been used in this conversation. Supply true or false when known. Omit when unknown.",
+      "type": "boolean"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Part name and visible version, at most 100 characters. Name separate parts and cutaway/test variants distinctly."
+    },
+    "brief": {
+      "type": "string",
+      "minLength": 40,
+      "maxLength": 10000,
+      "description": "Required detailed English model intent, 40 to 10000 characters. Describe purpose, use, mating parts, dimensions, measured facts, fit requirements, known printer/material constraints and assumptions. Summarize the request rather than copying chat messages."
+    },
+    "decisions": {
+      "minItems": 1,
+      "maxItems": 30,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2000
+      },
+      "description": "Required design notes, 1 to 30 entries of at most 2000 characters each. Explain orientation, bed face, support/bridge choices, fit parameters, fasteners, assumptions and changes from the previous revision as relevant."
+    },
+    "idempotency_key": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]{16,100}$",
+      "description": "Use the key from prepare_model. Reuse it only for retries of identical source, brief and decisions. A new revision needs a new key."
+    },
+    "access_token": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$",
+      "description": "Secret from prepare_model. Required for submission and guest retrieval. Preserve privately with the handle."
+    },
+    "erasure_token": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$",
+      "description": "Separate secret from prepare_model for deletion, including after guest downloads expire. Preserve privately."
+    },
+    "file": {
+      "type": "object",
+      "properties": {
+        "download_url": {
+          "type": "string",
+          "maxLength": 8000,
+          "format": "uri"
+        },
+        "file_id": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "mime_type": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "file_name": {
+          "type": "string",
+          "maxLength": 512
+        }
+      },
+      "required": [
+        "download_url",
+        "file_id"
+      ],
+      "additionalProperties": false,
+      "description": "Host file parameter for an attached or generated PNG of the printable artwork."
+    },
+    "image_url": {
+      "description": "Reachable HTTPS URL or PNG data URL for the printable artwork. Send only the art to be traced.",
+      "type": "string",
+      "maxLength": 5700000
+    },
+    "artwork": {
+      "description": "Handle from refine_artwork or trace_artwork, with guest access token if needed.",
+      "type": "object",
+      "properties": {
+        "model_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "description": "Model or view job UUID returned by the service."
+        },
+        "access_token": {
+          "description": "Original guest access secret. Required for guest models; omitted for models owned by the signed-in identity.",
+          "type": "string",
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "model_id"
+      ],
+      "additionalProperties": false
+    },
+    "palette": {
+      "description": "Ordered #RRGGBB colors. First is the base, later colors are raised in this order. Omit to select colors from the image.",
+      "minItems": 1,
+      "maxItems": 16,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^#[0-9a-fA-F]{6}$"
+      }
+    },
+    "colors": {
+      "description": "Maximum number of automatically selected colors, including the base. Default 4.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16
+    },
+    "footprint": {
+      "description": "Rectangle fills transparent pixels with the base color. Silhouette keeps transparent areas open.",
+      "type": "string",
+      "enum": [
+        "rectangle",
+        "silhouette"
+      ]
+    },
+    "cleanup": {
+      "description": "Clean small color artifacts. Defaults to true for new images.",
+      "type": "boolean"
+    },
+    "resolution_px": {
+      "description": "Longest edge of the tracing grid in pixels. Defaults to 480.",
+      "type": "integer",
+      "minimum": 64,
+      "maximum": 720
+    }
+  },
+  "required": [
+    "name",
+    "brief",
+    "decisions",
+    "idempotency_key",
+    "access_token",
+    "erasure_token"
+  ],
+  "additionalProperties": false
+}
+~~~
+
+### create_colored_relief
+
+Refine a printable PNG, trace it and build a printable raised sign or decoration in one job. Use the host image generator first for new artwork. Call prepare_model, submit a file, image_url or authorized artwork handle, and poll get_model. Defaults to four colors including the base. Builds one supported Z band per color, with layer-aligned transitions and a planned color-change schedule. Outputs a color preview, 3MF and STL. Finish with show_model.
+
+Guest use is available; authenticated identity is used when supplied.
+Annotations: {"title":"Create colored relief","readOnlyHint":false,"destructiveHint":false,"openWorldHint":true}
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| render_quota_token | no | Optional render quota capability returned by the existing signed-in Print Ready connection. Preserve and pass it across modeling tool routes to use that account allowance. Grants no profile, library or model access. Refresh through the existing connection if expired; do not sign in again or silently fall back to guest quota. |
+| context_model | no | An authorized model handle from this conversation, with its guest access token when needed. Pass it for another part, cutaway or test in the same conversation. This preserves session correlation when the host omits conversation metadata. It does not grant access to other models. For a revision, previous_model already carries this context. |
+| previous_model | no | For a revision, reference the earlier model ID and its guest access token if needed. The service uses this link to count iterations. Each revision keeps its own files and access. |
+| imagegen_used | no | Report whether image generation has been used in this conversation. Supply true or false when known. Omit when unknown. |
+| name | yes | Part name and visible version, at most 100 characters. Name separate parts and cutaway/test variants distinctly. |
+| brief | yes | Required detailed English model intent, 40 to 10000 characters. Describe purpose, use, mating parts, dimensions, measured facts, fit requirements, known printer/material constraints and assumptions. Summarize the request rather than copying chat messages. |
+| decisions | yes | Required design notes, 1 to 30 entries of at most 2000 characters each. Explain orientation, bed face, support/bridge choices, fit parameters, fasteners, assumptions and changes from the previous revision as relevant. |
+| idempotency_key | yes | Use the key from prepare_model. Reuse it only for retries of identical source, brief and decisions. A new revision needs a new key. |
+| access_token | yes | Secret from prepare_model. Required for submission and guest retrieval. Preserve privately with the handle. |
+| erasure_token | yes | Separate secret from prepare_model for deletion, including after guest downloads expire. Preserve privately. |
+| file | no | Host file parameter for an attached or generated PNG of the printable artwork. |
+| image_url | no | Reachable HTTPS URL or PNG data URL for the printable artwork. Send only the art to be traced. |
+| artwork | no | Handle from refine_artwork or trace_artwork, with guest access token if needed. |
+| palette | no | Ordered #RRGGBB colors. First is the base, later colors are raised in this order. Omit to select colors from the image. |
+| colors | no | Maximum number of automatically selected colors, including the base. Default 4. |
+| footprint | no | Rectangle fills transparent pixels with the base color. Silhouette keeps transparent areas open. |
+| cleanup | no | Clean small color artifacts. Defaults to true for new images. |
+| resolution_px | no | Longest edge of the tracing grid in pixels. Defaults to 480. |
+| format | yes | Bambu Studio filament assignments, or standard 3MF materials and build items. |
+| bed_center_mm | no | Placement center for Bambu Studio, in mm. Defaults to [128,128]. |
+| layer_height_mm | no | Layer height in millimetres. |
+| first_layer_height_mm | no | Layer height in millimetres. |
+| width_mm | yes | Finished width in millimetres. Height follows the source aspect ratio. |
+| band_layers | no | Number of print layers per palette color. Default 8 base layers and 4 layers for each raised color. |
+
+Exact input schema:
+
+~~~json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "render_quota_token": {
+      "description": "Optional render quota capability returned by the existing signed-in Print Ready connection. Preserve and pass it across modeling tool routes to use that account allowance. Grants no profile, library or model access. Refresh through the existing connection if expired; do not sign in again or silently fall back to guest quota.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    },
+    "context_model": {
+      "description": "An authorized model handle from this conversation, with its guest access token when needed. Pass it for another part, cutaway or test in the same conversation. This preserves session correlation when the host omits conversation metadata. It does not grant access to other models. For a revision, previous_model already carries this context.",
+      "type": "object",
+      "properties": {
+        "model_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "access_token": {
+          "type": "string",
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "model_id"
+      ],
+      "additionalProperties": false
+    },
+    "previous_model": {
+      "description": "For a revision, reference the earlier model ID and its guest access token if needed. The service uses this link to count iterations. Each revision keeps its own files and access.",
+      "type": "object",
+      "properties": {
+        "model_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "access_token": {
+          "type": "string",
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "model_id"
+      ],
+      "additionalProperties": false
+    },
+    "imagegen_used": {
+      "description": "Report whether image generation has been used in this conversation. Supply true or false when known. Omit when unknown.",
+      "type": "boolean"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Part name and visible version, at most 100 characters. Name separate parts and cutaway/test variants distinctly."
+    },
+    "brief": {
+      "type": "string",
+      "minLength": 40,
+      "maxLength": 10000,
+      "description": "Required detailed English model intent, 40 to 10000 characters. Describe purpose, use, mating parts, dimensions, measured facts, fit requirements, known printer/material constraints and assumptions. Summarize the request rather than copying chat messages."
+    },
+    "decisions": {
+      "minItems": 1,
+      "maxItems": 30,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2000
+      },
+      "description": "Required design notes, 1 to 30 entries of at most 2000 characters each. Explain orientation, bed face, support/bridge choices, fit parameters, fasteners, assumptions and changes from the previous revision as relevant."
+    },
+    "idempotency_key": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]{16,100}$",
+      "description": "Use the key from prepare_model. Reuse it only for retries of identical source, brief and decisions. A new revision needs a new key."
+    },
+    "access_token": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$",
+      "description": "Secret from prepare_model. Required for submission and guest retrieval. Preserve privately with the handle."
+    },
+    "erasure_token": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$",
+      "description": "Separate secret from prepare_model for deletion, including after guest downloads expire. Preserve privately."
+    },
+    "file": {
+      "type": "object",
+      "properties": {
+        "download_url": {
+          "type": "string",
+          "maxLength": 8000,
+          "format": "uri"
+        },
+        "file_id": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "mime_type": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "file_name": {
+          "type": "string",
+          "maxLength": 512
+        }
+      },
+      "required": [
+        "download_url",
+        "file_id"
+      ],
+      "additionalProperties": false,
+      "description": "Host file parameter for an attached or generated PNG of the printable artwork."
+    },
+    "image_url": {
+      "description": "Reachable HTTPS URL or PNG data URL for the printable artwork. Send only the art to be traced.",
+      "type": "string",
+      "maxLength": 5700000
+    },
+    "artwork": {
+      "description": "Handle from refine_artwork or trace_artwork, with guest access token if needed.",
+      "type": "object",
+      "properties": {
+        "model_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "description": "Model or view job UUID returned by the service."
+        },
+        "access_token": {
+          "description": "Original guest access secret. Required for guest models; omitted for models owned by the signed-in identity.",
+          "type": "string",
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "model_id"
+      ],
+      "additionalProperties": false
+    },
+    "palette": {
+      "description": "Ordered #RRGGBB colors. First is the base, later colors are raised in this order. Omit to select colors from the image.",
+      "minItems": 1,
+      "maxItems": 16,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^#[0-9a-fA-F]{6}$"
+      }
+    },
+    "colors": {
+      "description": "Maximum number of automatically selected colors, including the base. Default 4.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16
+    },
+    "footprint": {
+      "description": "Rectangle fills transparent pixels with the base color. Silhouette keeps transparent areas open.",
+      "type": "string",
+      "enum": [
+        "rectangle",
+        "silhouette"
+      ]
+    },
+    "cleanup": {
+      "description": "Clean small color artifacts. Defaults to true for new images.",
+      "type": "boolean"
+    },
+    "resolution_px": {
+      "description": "Longest edge of the tracing grid in pixels. Defaults to 480.",
+      "type": "integer",
+      "minimum": 64,
+      "maximum": 720
+    },
+    "format": {
+      "default": "bambu",
+      "description": "Bambu Studio filament assignments, or standard 3MF materials and build items.",
+      "type": "string",
+      "enum": [
+        "bambu",
+        "standard"
+      ]
+    },
+    "bed_center_mm": {
+      "description": "Placement center for Bambu Studio, in mm. Defaults to [128,128].",
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number",
+          "minimum": -2000,
+          "maximum": 2000
+        },
+        {
+          "type": "number",
+          "minimum": -2000,
+          "maximum": 2000
+        }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "layer_height_mm": {
+      "type": "number",
+      "minimum": 0.05,
+      "maximum": 1,
+      "description": "Layer height in millimetres."
+    },
+    "first_layer_height_mm": {
+      "type": "number",
+      "minimum": 0.05,
+      "maximum": 1,
+      "description": "Layer height in millimetres."
+    },
+    "width_mm": {
+      "type": "number",
+      "minimum": 5,
+      "maximum": 1500,
+      "description": "Finished width in millimetres. Height follows the source aspect ratio."
+    },
+    "band_layers": {
+      "description": "Number of print layers per palette color. Default 8 base layers and 4 layers for each raised color.",
+      "maxItems": 16,
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 300
+      }
+    }
+  },
+  "required": [
+    "name",
+    "brief",
+    "decisions",
+    "idempotency_key",
+    "access_token",
+    "erasure_token",
+    "format",
+    "width_mm"
+  ],
+  "additionalProperties": false
+}
+~~~
+
+### create_3mf
+
+Package one or more ready Print Ready STL models as a new 3MF model. Call prepare_model first. Set named parts, material colors, grouping, scale and offsets as needed. Separate objects can be resized independently in the slicer. Shared object names keep parts registered. Choose Bambu Studio filament assignments or standard 3MF. Poll get_model and call show_model for the new result. This tool works with any ready Print Ready STL.
+
+Guest use is available; authenticated identity is used when supplied.
+Annotations: {"title":"Create 3MF","readOnlyHint":false,"destructiveHint":false,"openWorldHint":false}
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| render_quota_token | no | Optional render quota capability returned by the existing signed-in Print Ready connection. Preserve and pass it across modeling tool routes to use that account allowance. Grants no profile, library or model access. Refresh through the existing connection if expired; do not sign in again or silently fall back to guest quota. |
+| context_model | no | An authorized model handle from this conversation, with its guest access token when needed. Pass it for another part, cutaway or test in the same conversation. This preserves session correlation when the host omits conversation metadata. It does not grant access to other models. For a revision, previous_model already carries this context. |
+| previous_model | no | For a revision, reference the earlier model ID and its guest access token if needed. The service uses this link to count iterations. Each revision keeps its own files and access. |
+| imagegen_used | no | Report whether image generation has been used in this conversation. Supply true or false when known. Omit when unknown. |
+| name | yes | Part name and visible version, at most 100 characters. Name separate parts and cutaway/test variants distinctly. |
+| brief | yes | Required detailed English model intent, 40 to 10000 characters. Describe purpose, use, mating parts, dimensions, measured facts, fit requirements, known printer/material constraints and assumptions. Summarize the request rather than copying chat messages. |
+| decisions | yes | Required design notes, 1 to 30 entries of at most 2000 characters each. Explain orientation, bed face, support/bridge choices, fit parameters, fasteners, assumptions and changes from the previous revision as relevant. |
+| idempotency_key | yes | Use the key from prepare_model. Reuse it only for retries of identical source, brief and decisions. A new revision needs a new key. |
+| access_token | yes | Secret from prepare_model. Required for submission and guest retrieval. Preserve privately with the handle. |
+| erasure_token | yes | Separate secret from prepare_model for deletion, including after guest downloads expire. Preserve privately. |
+| format | yes | Bambu Studio filament assignments, or standard 3MF materials and build items. |
+| bed_center_mm | no | Placement center for Bambu Studio, in mm. Defaults to [128,128]. |
+| parts | yes | Authorized ready models. Use common source coordinates for parts that must align. |
+
+Exact input schema:
+
+~~~json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "render_quota_token": {
+      "description": "Optional render quota capability returned by the existing signed-in Print Ready connection. Preserve and pass it across modeling tool routes to use that account allowance. Grants no profile, library or model access. Refresh through the existing connection if expired; do not sign in again or silently fall back to guest quota.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    },
+    "context_model": {
+      "description": "An authorized model handle from this conversation, with its guest access token when needed. Pass it for another part, cutaway or test in the same conversation. This preserves session correlation when the host omits conversation metadata. It does not grant access to other models. For a revision, previous_model already carries this context.",
+      "type": "object",
+      "properties": {
+        "model_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "access_token": {
+          "type": "string",
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "model_id"
+      ],
+      "additionalProperties": false
+    },
+    "previous_model": {
+      "description": "For a revision, reference the earlier model ID and its guest access token if needed. The service uses this link to count iterations. Each revision keeps its own files and access.",
+      "type": "object",
+      "properties": {
+        "model_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "access_token": {
+          "type": "string",
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "model_id"
+      ],
+      "additionalProperties": false
+    },
+    "imagegen_used": {
+      "description": "Report whether image generation has been used in this conversation. Supply true or false when known. Omit when unknown.",
+      "type": "boolean"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Part name and visible version, at most 100 characters. Name separate parts and cutaway/test variants distinctly."
+    },
+    "brief": {
+      "type": "string",
+      "minLength": 40,
+      "maxLength": 10000,
+      "description": "Required detailed English model intent, 40 to 10000 characters. Describe purpose, use, mating parts, dimensions, measured facts, fit requirements, known printer/material constraints and assumptions. Summarize the request rather than copying chat messages."
+    },
+    "decisions": {
+      "minItems": 1,
+      "maxItems": 30,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2000
+      },
+      "description": "Required design notes, 1 to 30 entries of at most 2000 characters each. Explain orientation, bed face, support/bridge choices, fit parameters, fasteners, assumptions and changes from the previous revision as relevant."
+    },
+    "idempotency_key": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]{16,100}$",
+      "description": "Use the key from prepare_model. Reuse it only for retries of identical source, brief and decisions. A new revision needs a new key."
+    },
+    "access_token": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$",
+      "description": "Secret from prepare_model. Required for submission and guest retrieval. Preserve privately with the handle."
+    },
+    "erasure_token": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$",
+      "description": "Separate secret from prepare_model for deletion, including after guest downloads expire. Preserve privately."
+    },
+    "format": {
+      "default": "bambu",
+      "description": "Bambu Studio filament assignments, or standard 3MF materials and build items.",
+      "type": "string",
+      "enum": [
+        "bambu",
+        "standard"
+      ]
+    },
+    "bed_center_mm": {
+      "description": "Placement center for Bambu Studio, in mm. Defaults to [128,128].",
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number",
+          "minimum": -2000,
+          "maximum": 2000
+        },
+        {
+          "type": "number",
+          "minimum": -2000,
+          "maximum": 2000
+        }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "parts": {
+      "minItems": 1,
+      "maxItems": 32,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "model_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "Model or view job UUID returned by the service."
+          },
+          "access_token": {
+            "description": "Original guest access secret. Required for guest models; omitted for models owned by the signed-in identity.",
+            "type": "string",
+            "maxLength": 256
+          },
+          "name": {
+            "description": "Part name, or use the source model name.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "object": {
+            "description": "Parts with the same object name stay in one assembly. Omit to create an independently editable object.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "color": {
+            "description": "Filament/material color as #RRGGBB. The order of first use sets Bambu filament slots.",
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          },
+          "material": {
+            "description": "Material name for this color, such as PLA or PETG. Distinct material names create separate slots even when their colors match.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "scale": {
+            "description": "Uniform scale around the source origin. Defaults to 1.",
+            "type": "number",
+            "minimum": 0.001,
+            "maximum": 100
+          },
+          "offset_mm": {
+            "description": "XYZ translation after scaling. Defaults to [0,0,0].",
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "number",
+                "minimum": -2000,
+                "maximum": 2000
+              },
+              {
+                "type": "number",
+                "minimum": -2000,
+                "maximum": 2000
+              },
+              {
+                "type": "number",
+                "minimum": -2000,
+                "maximum": 2000
+              }
+            ],
+            "items": false,
+            "minItems": 3,
+            "maxItems": 3
+          }
+        },
+        "required": [
+          "model_id"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Authorized ready models. Use common source coordinates for parts that must align."
+    }
+  },
+  "required": [
+    "name",
+    "brief",
+    "decisions",
+    "idempotency_key",
+    "access_token",
+    "erasure_token",
+    "format",
+    "parts"
   ],
   "additionalProperties": false
 }
@@ -517,14 +1503,15 @@ Exact input schema:
 
 ### download_models
 
-Create one ZIP containing the ordered STL files selected in the viewer. This action is available only to the viewer.
+Create a ZIP of the ordered STL files selected in the viewer. Set include_3mf to add the available 3MF print files and allow a single model. This action is available to the viewer.
 
 Guest use is available; authenticated identity is used when supplied.
-Annotations: {"title":"Download all STLs","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}
+Annotations: {"title":"Download print files","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}
 
 | Parameter | Required | Description |
 | --- | --- | --- |
 | models | yes | The ordered model handles to download. Each guest model requires its own access token. |
+| include_3mf | no | Include all available 3MF print files alongside STL files. |
 
 Exact input schema:
 
@@ -534,7 +1521,7 @@ Exact input schema:
   "type": "object",
   "properties": {
     "models": {
-      "minItems": 2,
+      "minItems": 1,
       "maxItems": 20,
       "type": "array",
       "items": {
@@ -558,6 +1545,10 @@ Exact input schema:
         "additionalProperties": false
       },
       "description": "The ordered model handles to download. Each guest model requires its own access token."
+    },
+    "include_3mf": {
+      "description": "Include all available 3MF print files alongside STL files.",
+      "type": "boolean"
     }
   },
   "required": [
@@ -678,7 +1669,7 @@ Exact input schema:
 
 ### show_model
 
-Open one model or an ordered collection of up to 20 models in the interactive in-chat STL viewer. First retrieve and inspect the real previews with get_model. Supply models in the order you want the numbered file list to appear; the first opens initially. Choose the models and their order to suit the task. Give diagnostic cutaways and printable parts distinct names. Users click numbered entries or arrows, or swipe the file strip on touch screens. The name, dimensions and STL download always refer to the selected file. Drag the viewport to rotate, scroll or pinch to zoom, and select preset cameras. Bed-contact faces at Z=0 appear darker without changing geometry. Camera movement and paging do not start render jobs. Guest capabilities and owned saved models are supported; a real PNG is shown if WebGL is unavailable. The client preloads the supplied STL files for paging. Use this viewer as the visual delivery without also posting PNG previews in chat. The Share button creates a public URL for the selected part, with this same rotatable viewer and an STL download and inline SCAD and model-details views. Sharing happens through the user-operated button. Stop sharing revokes the link. Always supply conversation_models with all available model handles from the current chat, including earlier revisions, separate parts and test variants, so My models can list them for guests. This gallery list does not change the selected files or their order.
+Open one model or an ordered collection of up to 20 models in the interactive in-chat STL viewer. First retrieve and inspect the real previews with get_model. Supply models in the order you want the numbered file list to appear; the first opens initially. Choose the models and their order to suit the task. Give diagnostic cutaways and printable parts distinct names. Users click numbered entries or arrows, or swipe the file strip on touch screens. The name, dimensions and STL download always refer to the selected file. Drag the viewport to rotate, scroll or pinch to zoom, and select preset cameras. Bed-contact faces at Z=0 appear darker without changing geometry. Camera movement and paging do not start render jobs. Guest capabilities and owned saved models are supported; a real PNG is shown if WebGL is unavailable. The client preloads the supplied STL files for paging. Use this viewer as the visual delivery without also posting PNG previews in chat. The Share button creates a public URL for the selected part, with this same rotatable viewer and an STL download and inline SCAD and model-details views. Sharing happens through the user-operated button. Stop sharing revokes the link. Always supply conversation_models with all available model handles from the current chat, including earlier revisions, separate parts and test variants, so My models can list them for guests. This gallery list does not change the selected files or their order. For models with a 3MF, the viewer offers Download 3MF and Download all files.
 
 Guest use is available; authenticated identity is used when supplied.
 Annotations: {"title":"Show model","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}
