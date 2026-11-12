@@ -1,6 +1,6 @@
 {
   "name": "print-ready-dev",
-  "version": "0.7.37",
+  "version": "0.7.41",
   "description": "Design useful 3D-printable parts with real OpenSCAD previews, editable source and STL downloads.",
   "author": {
     "name": "Brian Hockenmaier"
